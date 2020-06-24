@@ -1,0 +1,38 @@
+﻿@inject HttpClient Http
+
+<DxComboBox NullText="Seleccione Deposito..." ReadOnly="@EsSoloLectura"
+            Data="@Depositos"
+            TextFieldName="DES_DEP"
+            SelectedItem="@DepositoSeleccionado"
+            SelectedItemChanged="@((deposito)=> SelectedDepositoChanged(deposito))">
+</DxComboBox>
+
+@code {
+    IEnumerable<Deposito> Depositos = new List<Deposito>();
+
+    [Parameter] public Deposito DepositoSeleccionado { get; set; } = new Deposito();
+    [Parameter] public EventCallback<Deposito> OnSelectedDepositoChanged { get; set; }
+    [Parameter] public bool EsSoloLectura { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Depositos = await Http.GetFromJsonAsync<IEnumerable<Deposito>>("api/Depositos");
+        //var nuevoItem = (new Deposito[] { new Deposito() { 
+        //    CG_DEP = 0,
+        //    DES_DEP = "SELECCIONAR DEPOSITO"
+        //} });
+
+        //Depositos = nuevoItem.Concat(Depositos).ToArray();
+        DepositoSeleccionado = Depositos.FirstOrDefault(d=> d.CG_DEP == 0);
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void SelectedDepositoChanged(Deposito depos)
+    {
+        DepositoSeleccionado = depos;
+        OnSelectedDepositoChanged.InvokeAsync(DepositoSeleccionado);
+        InvokeAsync(StateHasChanged);
+    }
+
+}

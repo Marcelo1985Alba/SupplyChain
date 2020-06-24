@@ -1,0 +1,42 @@
+﻿@inject HttpClient Http
+
+<DxComboBox NullText="Seleccione un tipo de operacion..."
+            Data="@Tipos"
+            TextFieldName="Descrip"
+            SelectedItem="@TipooSeleccionado"
+            SelectedItemChanged="@((tire)=> SelectedTipooChanged(tire))">
+</DxComboBox>
+
+@code {
+    List<Tire> Tipos = new List<Tire>() {
+    new Tire() { Tipoo = 10, Descrip = "Entrega de insumos a una orden de fabricación" },
+    new Tire() { Tipoo = 10, Descrip = "Devolución de insumos de una orden de fabricación" },
+    //new Tire() { Tipoo = 28, Descrip = "Entrega de un insumo a una orden de armado" },/*tipo 28 = order de armado y tipo 10  10 OF*/
+    //new Tire() { Tipoo = 28, Descrip = "Devolución de un insumo de una orden de armado" },
+    //new Tire() { Tipoo = 2, Descrip = "Entrega de consumibles" }, /**/
+    new Tire() { Tipoo = 5, Descrip = "Recepción de insumos de un proveedor" }, /*Tipo 5 Recepcion y tipo 6 devolucion: */
+    new Tire() { Tipoo = 6, Descrip = "Devolución de insumos a un proveedor" },
+    //new Tire() { Tipoo = 14, Descrip = "Envío de un insumo o producto a scrap" }, /*TIPO 14 ENTREGA A SCRAP TIPO 15 DESTRUCCION DE SCRAP(NO PROGRAMADO) TIPO 16 DEVOLUCION DE SCRAP*/
+    //new Tire() { Tipoo = 15, Descrip = "Recuperación de un insumo o producto de scrap" },
+    new Tire() { Tipoo = 9, Descrip = "Movimientos entre depósitos" }, /*TIPO 9*/
+    new Tire() { Tipoo = 1, Descrip = "Remito a un cliente con y sin pedido" } /*TIPO 1*/
+    //new Tire() { Tipoo = 1, Descrip = "Devolución de un cliente con y sin pedido" }
+    };
+
+    [Parameter]
+    public Tire TipooSeleccionado { get; set; } = new Tire();
+    [Parameter]
+    public EventCallback<Tire> OnSelectedTireChanged { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void SelectedTipooChanged(Tire tire)
+    {
+        TipooSeleccionado = tire;
+        OnSelectedTireChanged.InvokeAsync(TipooSeleccionado);
+        InvokeAsync(StateHasChanged);
+    }
+
+}

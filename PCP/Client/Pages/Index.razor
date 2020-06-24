@@ -1,0 +1,24 @@
+﻿@page "/"
+@inject ToastService toastService
+
+<h1 class="mt-5">Hello, world!</h1>
+
+Welcome to your new app.
+
+<SurveyPrompt Title="How is Blazor working for you?" />
+
+<ComboDeposito DepositoSeleccionado="@SelectedDepositoSalida"></ComboDeposito>
+
+<button class="btn btn-info" @onclick="@(() => toastService.ShowToast("I'm an INFO message", TipoAlerta.Info))">Info Toast</button>
+<button class="btn btn-success" @onclick="@(() => toastService.ShowToast("I'm a SUCCESS message", TipoAlerta.Success))">Success Toast</button>
+<button class="btn btn-warning" @onclick="@(() => toastService.ShowToast("I'm a WARNING message", TipoAlerta.Warning))">Warning Toast</button>
+<button class="btn btn-danger" @onclick="@(() => toastService.ShowToast("I'm an ERROR message", TipoAlerta.Error))">Error Toast</button>
+
+@code{
+    private Deposito selectedDepositoSalida = null;
+    Deposito SelectedDepositoSalida
+    {
+        get => selectedDepositoSalida;
+        set { selectedDepositoSalida = value; InvokeAsync(StateHasChanged); }
+    }
+}

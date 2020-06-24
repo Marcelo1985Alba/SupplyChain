@@ -1,0 +1,601 @@
+﻿@page "/opestock"
+@inject IJSRuntime JsRuntime
+@inject HttpClient Http
+@inject ToastService toastService
+@using System.Text.Json
+<head>
+    ...
+    <link href="_content/DevExpress.Blazor/dx-blazor.css" rel="stylesheet" />
+</head>
+<div class="form-inline">
+    <h4 class="mt-5 text-left">
+        Operaciones de Stock a Realizar
+        <small class="text-info"> <strong>@SelectedTire?.Descrip</strong></small>
+    </h4>
+    <DxToolbar AdaptivityAutoCollapseItemsToIcons="true" CssClass="mt-4">
+            <Items>
+                <DxToolbarItem Text="Info" RenderStyle="ButtonRenderStyle.Info" 
+                               Alignment="ToolbarItemAlignment.Right" 
+                               @onclick="@(() => toastService.ShowToast("I'm an INFO message", TipoAlerta.Info))" />
+                <DxToolbarItem Text="Imprimir" RenderStyle="ButtonRenderStyle.Success" 
+                               Alignment="ToolbarItemAlignment.Right" />
+                <DxToolbarItem IconCssClass="tb-icon tb-icon-alert" BeginGroup="true" 
+                               RenderStyle="ButtonRenderStyle.Danger" Text="Eliminar" 
+                               Alignment="ToolbarItemAlignment.Right" />
+                <DxToolbarItem IconCssClass="tb-icon tb-icon-alert" Text="Nuevo" 
+                               Alignment="ToolbarItemAlignment.Right" />
+                <DxToolbarItem IconCssClass="tb-icon tb-icon-alert" 
+                               RenderStyle="ButtonRenderStyle.Warning" Text="Warning" 
+                               Alignment="ToolbarItemAlignment.Right" />
+            </Items>
+        </DxToolbar>
+
+</div>
+<hr />
+
+<DxFormLayout>
+    @*SELECCION DE TIPO DE REMITO*@
+    <DxFormLayoutItem Caption="Operaciones de Stock:" ColSpanLg="6" ColSpanMd="4">
+        <Template>
+            <ComboTipoo TipooSeleccionado="@SelectedTire" OnSelectedTireChanged="@SelectedTireChanged" />
+        </Template>
+    </DxFormLayoutItem>
+    <DxFormLayoutItem Caption="Orden de Fabrición:" ColSpanMd="3" ColSpanXs="6">
+        <Template>
+            <BuscadorOFab EsSoloLectura="OFSoloLectura" HabilitaBotonBusqueda="HabilitaBotonOF"
+                          MostraBotonBusqueda="false" MostrarSpin="false"
+                          Valor="@OrdenFabricacion" OnOFSeleccionada="onObjectSelected" />
+
+        </Template>
+    </DxFormLayoutItem>
+    @*BUSCAR OF*@
+
+    <DxFormLayoutItem Caption="Orden de Compra:" ColSpanMd="3" ColSpanXs="6">
+        <Template>
+            <div class="form-row">
+                <div class="col">
+                    <BuscadorOCompra EsSoloLectura="@OCSoloLectura" HabilitaBotonBusqueda="@HabilitaBotonOC"
+                                     MostraBotonBusqueda="@MostrarBotorOC" MostrarSpin="false" 
+                                     CodigoDeposito="@SelectedDepositoOC?.CG_DEP" Remito="@Remito"
+                                     Valor="@OCompra" OnOCSeleccionada="onObjectSelected" />
+                </div>
+            </div>
+        </Template>
+    </DxFormLayoutItem>
+
+    @*ABRIR O BUSCAR VALES*@
+    <DxFormLayoutItem Caption="Numero de Vale:" ColSpanMd="3" ColSpanXs="6">
+        <Template>
+            <div class="form-row">
+                <div class="col-10">
+                    <DxSpinEdit @bind-Value="@NumVale"></DxSpinEdit>
+
+                </div>
+                <div class="col-2">
+                    <button class="btn btn-outline-info btn-sm"
+                            disabled="@DisableCssClass"
+                            @onclick="AbrirVale">
+                        ...
+                    </button>
+
+                </div>
+
+            </div>
+        </Template>
+    </DxFormLayoutItem>
+    <DxFormLayoutItem Caption="Fecha:" ColSpanMd="3" ColSpanXs="6">
+        <Template>
+            <div class="form-row">
+                <div class="col-12">
+                    <DxDateEdit @bind-Date="@Fecha" Format="dd/MM/yyyy"></DxDateEdit>
+                </div>
+            </div>
+        </Template>
+    </DxFormLayoutItem>
+    <DxFormLayoutItem Caption="Pedido:" ColSpanMd="3" ColSpanXs="12">
+        <Template>
+            <BuscadorPedido Valor="@Pedido" MostrarSpin="false" EsSoloLectura="true"
+                            HabilitaBotonBusqueda="false" MostraBotonBusqueda="false"
+                            OnOCSeleccionada="onObjectSelected" />
+        </Template>
+    </DxFormLayoutItem>
+    @*DEPOSITOS*@
+    <DxFormLayoutItem Caption="Deposito de Salida:" ColSpanMd="6">
+        <Template>
+            <ComboDeposito DepositoSeleccionado="@selectedDepositoSalida" EsSoloLectura="@DepositoSalidaSoloLectura"
+                           OnSelectedDepositoChanged="SelectedDepositoSalidaChanged" />
+        </Template>
+    </DxFormLayoutItem>
+    <DxFormLayoutItem Caption="Deposito de Ingreso:" ColSpanMd="6">
+        <Template>
+            <ComboDeposito DepositoSeleccionado="@selectedDepositoIngreso" EsSoloLectura="@DepositoIngresoSoloLectura"
+                           OnSelectedDepositoChanged="SelectedDepositoIngresoChanged" />
+        </Template>
+    </DxFormLayoutItem>
+    <DxFormLayoutItem Caption="@labelClienteProveedor" ColSpanXl="8" ColSpanMd="6" ColSpanSm="12">
+        <Template>
+            <div class="form-row">
+                <div class="col-3 m-0">
+                    <DxSpinEdit @bind-Value="@Cg_CLI_Cg_PROVE" ReadOnly="true" ShowSpinButtons="false"
+                                ClearButtonDisplayMode="@DataEditorClearButtonDisplayMode.Auto">
+                    </DxSpinEdit>
+
+                </div>
+                <div class="col-9">
+                    <DxTextBox @bind-Text="@DescripcionPro" CssClass="ml-1" ReadOnly="true" />
+
+                </div>
+                @*<div class="col-2">
+                        <button class="btn btn-outline-secondary btn-sm">
+                            Buscar
+                        </button>
+
+                    </div>*@
+            </div>
+        </Template>
+    </DxFormLayoutItem>
+    <DxFormLayoutItem Caption="Remito:" ColSpanLg="4" ColSpanMd="6" ColSpanSm="12">
+        <Template>
+            <div class="form-row">
+                <div class="col">
+
+                    <DxTextBox @bind-Text="@Remito" Id="remito"
+                               ClearButtonDisplayMode="@DataEditorClearButtonDisplayMode.Auto">
+                    </DxTextBox>
+
+                </div>
+            </div>
+
+        </Template>
+    </DxFormLayoutItem>
+</DxFormLayout>
+
+<CascadingValue Value="@StockGuardado">
+    <div class="container-fluid">
+        <GridEditStock DataSource="@ItemsVale" PermiteAgregar="@PermiteAgregarItem"
+                       PermiteEditar="@PermiteEditarItem" PermiteEliminar="@PermiteEliminarItem"
+                       onGuardar="onGuardarPedido" />
+    </div>
+</CascadingValue>
+<BuscadorEmergente Titulo=@tituloBuscador Visible="@PopupBuscadorVisible" DataSource="@ItemsABuscar"
+                   Columnas="@ColumnasBuscador" onObjetoSeleccionado="onObjectSelected" />
+
+@code {
+    Stock StockGuardado = new Stock();
+    bool DisableCssClass { get => selectedTire == null ? true : false; }
+    int NumVale { get; set; }
+    bool MostrarAlerta = false;
+    TipoAlerta TipoAlert = TipoAlerta.Error;
+    string Mensaje = "";
+
+    private bool DepositoSalidaSoloLectura = true;
+    private bool DepositoIngresoSoloLectura = true;
+
+    Producto[] Productos = null;
+    Deposito[] Depositos = null;
+    Stock[] ItemsVale = null;
+    bool PermiteAgregarItem { get; set; } = false;
+    bool PermiteEditarItem { get; set; } = false;
+    bool PermiteEliminarItem { get; set; } = false;
+
+    bool OCSoloLectura = true;
+    bool HabilitaBotonOC = true;
+    bool MostrarBotorOC = false;
+    bool OFSoloLectura = true;
+    bool HabilitaBotonOF = false;
+
+
+    string labelClienteProveedor = "Cliente/Proveedor";
+
+    Producto selectedProducto;
+    public Producto SelectedProducto
+    {
+        get { return selectedProducto; }
+        set
+        {
+            selectedProducto = value;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    #region "CABACERA VALE"
+    private Tire selectedTire = null;
+    Tire SelectedTire
+    {
+        get => selectedTire;
+        set { selectedTire = value; InvokeAsync(StateHasChanged); }
+    }
+
+    private int OrdenFabricacion { get; set; } = 0;
+    private int Pedido { get; set; } = 0;
+    private int? Cg_CLI_Cg_PROVE { get; set; } = 0;
+    private int OCompra { get; set; } = 0;
+    private string Remito = "0000-00000000";
+    private DateTime fecha = DateTime.Now;
+    DateTime Fecha { get => fecha; set { fecha = value; InvokeAsync(StateHasChanged); } }
+    string Codigoi { get; set; } = "";
+    string DescripcionPro { get; set; } = "";
+
+    private Deposito selectedDepositoOC = null;
+    Deposito SelectedDepositoOC
+    {
+        get => selectedDepositoOC;
+        set { selectedDepositoOC = value; InvokeAsync(StateHasChanged); }
+    }
+
+    private Deposito selectedDepositoSalida = null;
+    Deposito SelectedDepositoSalida
+    {
+        get => selectedDepositoSalida;
+        set { selectedDepositoSalida = value; InvokeAsync(StateHasChanged); }
+    }
+
+    private Deposito selectedDepositoIngreso = null;
+    Deposito SelectedDepositoIngreso
+    {
+        get => selectedDepositoIngreso;
+        set { selectedDepositoIngreso = value; InvokeAsync(StateHasChanged); }
+    }
+
+    #endregion
+
+    void OnChanged() { InvokeAsync(StateHasChanged); }
+
+    protected override async Task OnInitializedAsync()
+    {
+        NumVale = await Http.GetFromJsonAsync<int>($"api/Stock/GetMaxVale");
+        Depositos = await Http.GetFromJsonAsync<Deposito[]>("api/Depositos");
+        selectedDepositoSalida = Depositos.FirstOrDefault(d => d.CG_DEP == 0);
+        selectedDepositoIngreso = Depositos.FirstOrDefault(d => d.CG_DEP == 0);
+        await InvokeAsync(StateHasChanged);
+        ItemsVale = new List<Stock>().ToArray();
+    }
+
+    void SelectedTireChanged(Tire tire)
+    {
+        selectedTire = tire;
+        //Dependiendo el tire Habilitar controles
+        if (selectedTire?.Tipoo > 0)
+        {
+            PermiteAgregarItem = true;
+        }
+        else
+        {
+            PermiteAgregarItem = false;
+        }
+
+        StockGuardado.TIPOO = selectedTire.Tipoo;
+        MostrarBotorOC = false;
+        HabilitaBotonOC = false;
+        OCSoloLectura = true;
+        HabilitaBotonOF = false;
+        OFSoloLectura = true;
+        DepositoSalidaSoloLectura = true;
+        DepositoIngresoSoloLectura = true;
+        SelectedDepositoOC = new Deposito();
+
+        if (selectedTire?.Tipoo == 5) //recep prove
+        {
+            HabilitaBotonOC = true;
+            MostrarBotorOC = true;
+            DepositoIngresoSoloLectura = false;
+            labelClienteProveedor = "Proveedor:";
+        }
+
+        if (selectedTire?.Tipoo == 6)//dev prove
+        {
+            HabilitaBotonOC = true;
+            MostrarBotorOC = true;
+            DepositoSalidaSoloLectura = false;
+            labelClienteProveedor = "Proveedor:";
+        }
+
+        if (selectedTire?.Tipoo == 10)
+        {
+            HabilitaBotonOF = true;
+        }
+
+
+        Console.WriteLine("Tipoo: " + selectedTire.Descrip);
+        Console.WriteLine("En nuevo registrado " + StockGuardado.TIPOO);
+        InvokeAsync(StateHasChanged);
+    }
+
+    void SelectedDepositoSalidaChanged(Deposito deposito)
+    {
+        selectedDepositoSalida = deposito;
+
+        if (selectedTire?.Tipoo == 6) //DEVOL prove
+        {
+            selectedDepositoOC = deposito;
+            Console.WriteLine("Deposito Salida: " + selectedDepositoOC?.DES_DEP);
+        }
+    }
+    void SelectedDepositoIngresoChanged(Deposito deposito)
+    {
+        selectedDepositoIngreso = deposito;
+        if (selectedTire?.Tipoo == 5) //RECEP prove
+        {
+            selectedDepositoOC = deposito;
+        }
+    }
+
+    void CargarVale()
+    {
+        NumVale = (int)ItemsVale[0].VALE;
+        Fecha = ItemsVale[0].FE_MOV;
+        //depos: ver cual campo es ingreso y salida: tal vez depende segun el tipo de operacion
+
+        selectedDepositoIngreso = Depositos.Where(d => d.CG_DEP == ItemsVale[0].CG_DEP).FirstOrDefault();
+
+
+
+        OrdenFabricacion = (int)ItemsVale[0].CG_ORDF;
+        OCompra = (int)ItemsVale[0].OCOMPRA;
+        Pedido = (int)ItemsVale[0].PEDIDO;
+        Cg_CLI_Cg_PROVE = ItemsVale[0].CG_CLI == 0 ? ItemsVale[0].CG_PROVE : ItemsVale[0].CG_CLI;
+        DescripcionPro = ItemsVale[0].CG_CLI == 0 ? "Proveedor" : "Cliente";
+        Remito = ItemsVale[0].REMITO;
+        PermiteAgregarItem = true;
+        PermiteEditarItem = true;
+        PermiteEliminarItem = true;
+        InvokeAsync(StateHasChanged);
+    }
+
+    #region "BUSCADOR EMERGENTE"
+    string tituloBuscador { get; set; } = "";
+    private bool popupVisible = false;
+    bool PopupVisible { get => popupVisible; set { popupVisible = value; InvokeAsync(StateHasChanged); } }
+
+    private async Task onGuardarPedido(Stock stock)
+    {
+        //stock.NUMOCI = 0;
+        stock.FE_MOV = DateTime.Now;
+        stock.VALE = NumVale;
+        //stock.REMITO = Remito;
+        //stock.CG_CLI = 0;
+        stock.CG_PROVE = Cg_CLI_Cg_PROVE;
+        stock.DES_PROVE = DescripcionPro.Trim();
+        //stock.FLAG = 0;
+        //stock.AVISO = "";
+        //stock.CG_ORDF = 0;
+        stock.OCOMPRA = OCompra;
+        stock.CG_DEP = SelectedDepositoIngreso.CG_DEP;
+        //stock.VOUCHER = 0;
+        stock.TIPOO = selectedTire.Tipoo;
+        stock.AVISO = "RECEPCION DE INSUMOS DE PROVEEDOR"; /*VERIFICAR TIPOO*/
+        //stock.TIPO = "";
+        //stock.CG_POSTA = "";
+        //stock.COMPROB = "";
+        //stock.CG_DEN = 0;
+        //stock.DESCUENTO = 0;
+        //stock.CUIT = "";
+        //stock.DES_CLI = "";
+        //stock.DIRECC = "";
+        //stock.DIRENT = "";
+        //stock.FACTURA = "";
+        //stock.LEYENDA = "";
+        //stock.LOCALIDAD = "";
+        //stock.MONEDA = "";
+        //stock.OBS1 = "";
+        //stock.OBS2 = "";
+        //stock.OBS3 = "";
+        //stock.OBS4 = "";
+        //stock.OBSERITEM = "";
+        //stock.OBSERVACIONES = "";
+        //stock.ORCO = "";
+        //stock.UBICACION = "";
+        //stock.UNIDA = "";
+        stock.ENTRREAL = DateTime.UtcNow;
+        //stock.PEDIDO = 0;
+        //stock.IVA = 0;
+        //stock.BONIFIC = 0;
+        //stock.CANTENT = 0;
+        //stock.CANTENTA = 0;
+        //stock.CANTPED = 0;
+        //stock.STOCKA = 0;
+        //stock.VA_INDIC = 0;
+        stock.IMPORTE1 = (stock.IMPORTE1 == null ? 0 : stock.IMPORTE1); //Se obtiene de la orden de compra
+                                                                        //stock.IMPORTE6 = 0;
+        HttpResponseMessage response = null;
+        Mensaje = $"Vale Nro: {stock.VALE}";
+        if (stock.REGISTRO == null || stock.REGISTRO <= 0)
+        {
+            response = await Http.PostAsJsonAsync("api/Stock", stock);
+
+        }
+        else
+        {
+            var registro = stock.REGISTRO;
+            response = await Http.PutAsJsonAsync($"api/Stock/PutStock/{registro}", stock);
+            Mensaje += " Actualizado";
+        }
+
+
+
+        if (response.StatusCode == System.Net.HttpStatusCode.BadRequest ||
+        response.StatusCode == System.Net.HttpStatusCode.NotFound ||
+        response.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            var mensServidor = await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine($"Error: {mensServidor}");
+            //Mostrar Alerta
+            MostrarAlerta = true;
+            TipoAlert = TipoAlerta.Error;
+            Mensaje = $"{mensServidor}";
+        }
+        else
+        {
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                //
+                var mensServidor = await response.Content.ReadFromJsonAsync<Stock>();
+                await InvokeAsync(StateHasChanged);
+                Console.WriteLine($"Registro: {mensServidor}");//guarda en la consola del chrome para ver los dtos.
+                StockGuardado = mensServidor;
+                toastService.ShowToast($"Registrado Correctemente.Vale {mensServidor.VALE}", TipoAlerta.Success);
+            }
+            //No abrir vale al guardar pues se perden los items: await AbrirVale();
+
+
+        }
+
+    }
+
+    private async Task onObjectSelected(object obj)
+    {
+        //ItemsVale = null;
+        PopupBuscadorVisible = false;
+        List<Stock> lStock = new List<Stock>();
+        var tipoEntidad = obj.GetType().Name;
+        if (tipoEntidad == "Compra")
+        {
+            var compra = (Compra)obj;
+            var ItemsCompras = await Http.GetFromJsonAsync<Compra[]>($"api/Compras/GetCompraByNumero/{compra.NUMERO}");
+            //Cargar los item de compras en los items de items para guardar vale
+            decimal registronegativo = 0;
+            foreach (var item in ItemsCompras)
+            {
+                registronegativo--;
+                Stock pedido = new Stock();
+                pedido.OCOMPRA = item.NUMERO;
+                OCompra = (int)item.NUMERO;
+                pedido.CG_PROVE = item.CG_PROVE;
+                Cg_CLI_Cg_PROVE = item.CG_PROVE;
+                DescripcionPro = item.DES_PROVE;
+                pedido.CG_ART = item.CG_MAT;
+                pedido.DES_ART = item.DES_MAT;
+                pedido.MONEDA = item.MONEDA;
+                pedido.UNID = item.UNID;
+                pedido.IMPORTE1 = item.PRECIO;
+                pedido.REGISTRO = registronegativo;
+                if (selectedTire.Tipoo == 5)
+                {
+                    pedido.STOCK = item.AUTORIZADO;
+                }
+
+                if (selectedTire.Tipoo == 6)
+                {
+                    pedido.STOCK = -1;
+                    //Hacer una busqueda especial de resumen stock y cargarlo:
+                    //buscar los prod por el deposito de salida seleccionado previamente en la cabacera.
+                    //poner la cantidad en negativo. Controlar la cantidad editada por el usuario.
+                }
+
+                lStock.Add(pedido);
+            }
+
+            ItemsVale = lStock.ToArray();
+            PermiteAgregarItem = true;
+            PermiteEditarItem = true;
+            PermiteEliminarItem = true;
+        }
+        if (tipoEntidad == "Stock")
+        {
+            var pedido = (Stock)obj;
+            //Get items del vale
+            var vale = pedido.VALE;
+            ItemsVale = await Http.GetFromJsonAsync<Stock[]>($"api/Stock/AbriVale/{pedido.VALE}");
+
+            if (ItemsVale != null || ItemsVale.Length > 0)
+            {
+                CargarVale();
+            }
+
+        }
+        if (tipoEntidad == "Programa")
+        {
+            var programa = (Programa)obj;
+            var ItemsPrograma = await Http.GetFromJsonAsync<Programa[]>($"api/Programas/GetProgramaByOF/{programa.CG_ORDF}");
+            //Cargar los item de compras en los items de items para guardar vale
+            foreach (var item in ItemsPrograma)
+            {
+                Stock pedido = new Stock();
+                pedido.PEDIDO = item.PEDIDO;
+                pedido.CG_ORDF = item.CG_ORDF;
+                OrdenFabricacion = (int)item.CG_ORDF;
+                //OCompra = (int)item.NUMERO;
+                pedido.CG_PROVE = 0;
+                Cg_CLI_Cg_PROVE = item.CG_CLI;
+                //DescripcionPro = item.des;
+                pedido.CG_ART = item.CG_PROD;
+                pedido.DES_ART = item.DES_PROD;
+                //pedido.UNID = item.un;
+                //pedido.IMPORTE1 = item.PRECIO;
+
+                lStock.Add(pedido);
+            }
+
+            ItemsVale = lStock.ToArray();
+            PermiteAgregarItem = false;
+            PermiteEditarItem = true;
+            PermiteEliminarItem = true;
+        }
+        if (tipoEntidad == "Producto")
+        {
+            selectedProducto = (Producto)obj;
+            Codigoi = selectedProducto.CG_PROD;
+            DescripcionPro = selectedProducto.DES_PROD;
+        }
+    }
+
+    #endregion
+
+    #region "BUSCAR VALES"
+
+    private bool popupBuscadorVisible = false;
+    bool PopupBuscadorVisible { get => popupBuscadorVisible; set { popupBuscadorVisible = value; InvokeAsync(StateHasChanged); } }
+    string[] ColumnasBuscador = null; /*{ "VALE", "FE_MOV", "CG_ART", "DES_ART", "DESPACHO", "LOTE", "SERIE" };*/
+    object[] ItemsABuscar;
+
+    protected async Task AbrirVale()
+    {
+
+        var vale = NumVale;
+        ItemsVale = await Http.GetFromJsonAsync<Stock[]>($"api/Stock/AbriVale/{vale}");
+
+        if (ItemsVale == null || ItemsVale.Length == 0)
+        {
+            await BuscarVales();
+        }
+        else
+        {
+            CargarVale();
+        }
+    }
+
+    protected async Task BuscarVales()
+    {
+        ItemsABuscar = null;
+        PopupBuscadorVisible = true;
+        tituloBuscador = $"Listado de Vales";
+        ColumnasBuscador = new string[] { "VALE", "FE_MOV", "CG_ART", "DES_ART" };
+        var tipoo = SelectedTire.Tipoo;
+        ItemsABuscar = await Http.GetFromJsonAsync<Stock[]>($"api/Stock/GetValesByTipo/{tipoo}");
+        if (ItemsABuscar == null)
+        {
+            ItemsABuscar = new List<Stock>().ToArray();
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    #endregion
+
+    #region "BUSCAR CLIENTE"
+    protected async Task BuscarProductos()
+    {
+        ItemsABuscar = null;
+        tituloBuscador = "Listado de Clientes";
+        ColumnasBuscador = new string[] { "CG_CLI", "DES_CLI" };
+        ItemsABuscar = await Http.GetFromJsonAsync<Producto[]>("api/Clientes");
+        PopupBuscadorVisible = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    #endregion
+
+
+
+
+}

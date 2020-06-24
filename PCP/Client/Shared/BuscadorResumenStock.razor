@@ -1,0 +1,69 @@
+﻿@inject HttpClient Http
+
+<div class="form-row container">
+    <div class="col-10">
+        @*@if (!EsSoloLectura)
+        {
+            <DxSpinEdit @bind-Value="@Valor" ShowSpinButtons="@MostrarSpin"></DxSpinEdit>
+        }
+        else
+        {
+            if (Mostrar)
+            {
+                <DxSpinEdit Value="0" ShowSpinButtons="@MostrarSpin" ReadOnly="true"></DxSpinEdit>
+            }
+        }*@
+
+    </div>
+    <div class="col-2">
+        <DxButton Text="..." RenderStyle="@ButtonRenderStyle.Danger"
+                  Visible="@MostraBotonBusqueda"
+                  Enabled="@HabilitaBotonBusqueda" Click="@(async (e)=> await BuscarStock())"
+                  RenderStyleMode="@ButtonRenderStyleMode.Outline" />
+    </div>
+
+</div>
+
+<BuscadorEmergente DataSource="ItemsABuscar" Columnas="ColumnasBuscador" Titulo="@TituloBuscador"
+                   Visible="@PopupBuscadorVisible" onObjetoSeleccionado="@(async(o)=> await EnviarObjetoSeleccionado(o))" />
+
+@code {
+
+    [Parameter] public decimal Valor { get; set; } = 0;
+    [Parameter] public bool EsSoloLectura { get; set; } = false;
+    [Parameter] public bool MostraBotonBusqueda { get; set; } = false;
+    [Parameter] public bool HabilitaBotonBusqueda { get; set; } = true;
+    [Parameter] public bool MostrarSpin { get; set; } = true;
+    [Parameter] public EventCallback<ResumenStock> OnOCSeleccionada { get; set; }
+    
+    private ResumenStock[] ItemsABuscar = null;
+    private string[] ColumnasBuscador = new string[] { "NUMERO", "DES_PROVE" };
+    private string TituloBuscador = "Listado de Ordenes de Compra";
+    private bool PopupBuscadorVisible = false;
+    private ButtonRenderStyle buttonRenderStyle = ButtonRenderStyle.Secondary;
+
+    private async Task BuscarStock()
+    {
+        PopupBuscadorVisible = true;
+        ItemsABuscar = await Http.GetFromJsonAsync<ResumenStock[]>("api/ResumenStocks");
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async Task EnviarObjetoSeleccionado(object rsStock)
+    {
+        var rs = (ResumenStock)rsStock;
+        PopupBuscadorVisible = false;
+        await OnOCSeleccionada.InvokeAsync(rs);
+    }
+
+    private ButtonRenderStyle CambiarColorBorde()
+    {
+        if (HabilitaBotonBusqueda)
+        {
+            buttonRenderStyle = ButtonRenderStyle.Danger;
+            return buttonRenderStyle;
+        }
+
+        return buttonRenderStyle;
+    }
+}

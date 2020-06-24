@@ -1,0 +1,38 @@
+﻿@if (Visible)
+{
+    <div class="alert @ObtenerCssAlert() alert-dismissible fade show" role="alert">
+        <button type="button" @onclick="@(()=> Visible = false)"  class="close" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+        <strong>@MensajeCabecera</strong> @Mensaje
+    </div>
+
+}
+
+@code {
+    private string cssAlert;
+    private string MensajeCabecera;
+    [Parameter] public SupplyChain.Shared.Enum.TipoAlerta Tipo { get; set; } = SupplyChain.Shared.Enum.TipoAlerta.Error;
+    [Parameter] public bool Visible { get; set; } = false;
+    [Parameter] public string Mensaje { get; set; } = "";
+
+
+    protected string ObtenerCssAlert()
+    {
+        switch (Tipo)
+        {
+            case SupplyChain.Shared.Enum.TipoAlerta.Error:
+                cssAlert = "alert-danger";
+                MensajeCabecera = "Error!";
+                break;
+            case SupplyChain.Shared.Enum.TipoAlerta.Success:
+                cssAlert = "alert-success";
+                MensajeCabecera = "Correctamente Guardado!";
+                break;
+            default:
+                break;
+        }
+
+        return cssAlert;
+    }
+}

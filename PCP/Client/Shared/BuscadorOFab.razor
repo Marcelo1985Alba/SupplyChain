@@ -1,0 +1,54 @@
+﻿@inject HttpClient Http
+
+<div class="form-row">
+    <div class="col-10">
+        @if (!EsSoloLectura)
+        {
+            <DxSpinEdit @bind-Value="@Valor" ShowSpinButtons="@MostrarSpin"></DxSpinEdit>
+        }
+        else
+        {
+            <DxSpinEdit Value="0" ShowSpinButtons="@MostrarSpin" ReadOnly="true"></DxSpinEdit>
+        }
+
+    </div>
+    <div class="col-2">
+        <DxButton Text="..." RenderStyle="@ButtonRenderStyle.Primary"
+                  Visible="@MostraBotonBusqueda"
+                  Enabled="@HabilitaBotonBusqueda" Click="@(async (e)=> await BuscarOF())"
+                  RenderStyleMode="@ButtonRenderStyleMode.Outline" />
+    </div>
+
+</div>
+
+<BuscadorEmergente DataSource="ItemsABuscar" Columnas="ColumnasBuscador" Titulo="@TituloBuscador"
+                   Visible="@PopupBuscadorVisible" onObjetoSeleccionado="@(async(o)=> await EnviarObjetoSeleccionado(o))" />
+
+@code {
+
+    [Parameter] public decimal Valor { get; set; } = 0;
+    [Parameter] public bool EsSoloLectura { get; set; } = false;
+    [Parameter] public bool MostraBotonBusqueda { get; set; } = true;
+    [Parameter] public bool HabilitaBotonBusqueda { get; set; } = true;
+    [Parameter] public bool MostrarSpin { get; set; } = true;
+    [Parameter] public EventCallback<Programa> OnOFSeleccionada { get; set; }
+    private Programa[] ItemsABuscar = null;
+    private string[] ColumnasBuscador = new string[] { "CG_ORDF", "FE_EMIT", "CG_PROD", "CANT" };
+    private string TituloBuscador = "Listado de Ordenes de Compra";
+    private bool PopupBuscadorVisible = false;
+
+    private async Task BuscarOF()
+    {
+        PopupBuscadorVisible = true;
+        ItemsABuscar = await Http.GetFromJsonAsync<Programa[]>("api/Programas");
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async Task EnviarObjetoSeleccionado(object ordfab)
+    {
+        var of = (Programa)ordfab;
+        PopupBuscadorVisible = false;
+        await OnOFSeleccionada.InvokeAsync(of);
+    }
+
+}

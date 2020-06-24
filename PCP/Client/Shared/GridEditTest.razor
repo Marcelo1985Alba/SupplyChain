@@ -1,0 +1,316 @@
+﻿@using System.ComponentModel.DataAnnotations;
+@using System.ComponentModel.DataAnnotations.Schema;
+@inject HttpClient Http
+
+@if (DataSource == null)
+{
+    return;
+}
+else
+{
+    <div class="table-responsive">
+
+        <table id="x1" class="dxbs-table table table-bordered table-sm myFormat myFormatHeader">
+            <tbody>
+                @*Preparar grilla para cargar sus columnas dinamicamente*@
+                <DxDataGrid @ref="@grid"
+                            Data="@DataSource"
+                            ShowFilterRow="false"
+                            ShowPager="false"
+                            RowRemoving="@((dataItem) => OnRowRemoving(dataItem))"
+                            RowEditStart="@(dataItem => OnRowEditStarting(dataItem))"
+                            RowInsertStart="@(() => OnRowEditStarting(null))">
+                    <Columns>
+                        <DxDataGridCommandColumn DeleteButtonVisible="PermiteEliminar"
+                                                 EditButtonVisible="PermiteEditar"
+                                                 NewButtonVisible="PermiteAgregar"
+                                                 Width="100px">
+                        </DxDataGridCommandColumn>
+                        <DxDataGridColumn Field="@nameof(Stock.CG_ART)" Caption="Cod. Producto"></DxDataGridColumn>
+                        <DxDataGridColumn Field="@nameof(Stock.DES_ART)" Caption="Desc. Producto"></DxDataGridColumn>
+                        <DxDataGridColumn Field="@nameof(Stock.STOCK)" Caption="Cantidad"></DxDataGridColumn>
+                        <DxDataGridComboBoxColumn Data="@Unidades" Field="@nameof(Stock.UNID)"
+                                                  Caption="Unidad">
+                        </DxDataGridComboBoxColumn>
+                        <DxDataGridColumn Field="@nameof(Stock.STOCKA)" Caption="Stock A"></DxDataGridColumn>
+                        <DxDataGridComboBoxColumn Data="@Unidades" Field="@nameof(Stock.UNIDA)"
+                                                  Caption="Unidad A">
+                        </DxDataGridComboBoxColumn>
+                        <DxDataGridColumn Field="@nameof(Stock.IMPORTE1)" Caption="Precio Unit."></DxDataGridColumn>
+                        <DxDataGridColumn Field="@nameof(Stock.IMPORTE2)" Caption="Importe2"></DxDataGridColumn>
+                        <DxDataGridColumn Field="@nameof(Stock.IMPORTE3)" Caption="Importe3"></DxDataGridColumn>
+                        <DxDataGridColumn Field="@nameof(Stock.IMPORTE4)" Caption="Importe4"></DxDataGridColumn>
+                        <DxDataGridColumn Field="@nameof(Stock.DESPACHO)" Caption="Despacho"></DxDataGridColumn>
+                        <DxDataGridColumn Field="@nameof(Stock.SERIE)" Caption="Serie"></DxDataGridColumn>
+                        <DxDataGridColumn Field="@nameof(Stock.LOTE)" Caption="Lote"></DxDataGridColumn>
+                    </Columns>
+
+                    <EditFormTemplate>
+                        <EditForm Model="@Model" Context="EditFormContext" OnValidSubmit="@HandleValidSubmit">
+                            @*<ObjectGraphDataAnnotationsValidator />*@
+
+                            <DxFormLayout>
+                                <DxFormLayoutItem Caption="" ColSpanMd="12" Context="FormLayoutContext">
+                                    <Template>
+                                        @foreach (var tipo in this.TiposInsumo)
+                                            {
+                                            <label class="form-check-label mr-2">
+                                                <input type="radio"
+                                                       name="tipo"
+                                                       checked="@(TipoInsumoCodigo == tipo.Codigo)"
+                                                       @onchange="@(() => TipoInsumoCodigo = tipo.Codigo)" />
+                                                @tipo.Descrip
+                                            </label>
+                                            }
+                                    </Template>
+                                </DxFormLayoutItem>
+                                <DxFormLayoutItem Caption="Codigo Producto:" ColSpanMd="4" Context="FormLayoutContext">
+                                    <Template>
+                                        <DxTextBox @bind-Text="@Model.CG_ART" ReadOnly="true" />
+                                        @*<ValidationMessage For="@(()=> EditContext.CodigoProducto)" />*@
+                                    </Template>
+                                </DxFormLayoutItem>
+                                <DxFormLayoutItem Caption="Description Producto:" ColSpanMd="7" Context="FormLayoutContext">
+                                    <Template>
+                                        <DxTextBox @bind-Text="@Model.DES_ART" ReadOnly="true" />
+                                        @*<ValidationMessage For="@(()=> EditContext.DescripcionProducto)" />*@
+                                    </Template>
+                                </DxFormLayoutItem>
+                                <DxFormLayoutItem Caption="" ColSpanMd="1" Context="FormLayoutContext">
+                                    <Template>
+                                        <button type="button" class="btn btn-primary btn-sm btn-block" @onclick="BuscarProductos">
+                                            Buscar
+                                        </button>
+                                    </Template>
+                                </DxFormLayoutItem>
+                                <DxFormLayoutItem Caption="Cantidad" ColSpanMd="4" Context="FormLayoutContext">
+                                    <Template>
+                                        <DxSpinEdit @bind-Value="@Model.STOCK" MinValue="1m"
+                                                    MaxValue="9999999m" Increment="0.0001m"
+                                                    ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" />
+                                        @*<ValidationMessage For="@(()=> EditContext.Cantidad)" />*@
+                                    </Template>
+                                </DxFormLayoutItem>
+                                <DxFormLayoutItem Caption="Unidad" ColSpanMd="2" Context="FormLayoutContext">
+                                    <Template>
+                                        @*<DxComboBox Data="@Unidades"
+                                NullText="Select Region..."
+                                @bind-SelectedItem="@EditContext.Unidad">
+                    </DxComboBox>*@
+                                        <DxTextBox @bind-Text="@Model.UNID" ReadOnly="true"></DxTextBox>
+                                    </Template>
+                                </DxFormLayoutItem>
+                                <DxFormLayoutItem Caption="Despacho" ColSpanMd="3" Context="FormLayoutContext">
+                                    <Template>
+                                        <DxTextBox @bind-Text="@Model.DESPACHO" />
+                                    </Template>
+                                </DxFormLayoutItem>
+                                <DxFormLayoutItem Caption="Serie" ColSpanMd="3" Context="FormLayoutContext">
+                                    <Template>
+                                        <DxTextBox @bind-Text="@Model.SERIE" />
+                                    </Template>
+                                </DxFormLayoutItem>
+                                <DxFormLayoutItem Caption="Lote" ColSpanMd="3" Context="FormLayoutContext">
+                                    <Template>
+                                        <DxTextBox @bind-Text="@Model.LOTE" />
+                                    </Template>
+                                </DxFormLayoutItem>
+                                <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                                    <Template>
+                                        <ValidationSummary />
+                                    </Template>
+                                </DxFormLayoutItem>
+                                <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                                    <Template>
+                                        <div class="dxbs-fl-ctrl dxbs-fl-ctrl-nc text-right">
+                                            <button class="btn btn-sm bg-success" type="submit">Guardar</button>
+                                            <button class="btn btn-sm bg-danger" type="button" @onclick="@OnCancelButtonClick">
+                                                Cancelar
+                                            </button>
+                                        </div>
+                                    </Template>
+                                </DxFormLayoutItem>
+                            </DxFormLayout>
+                        </EditForm>
+                    </EditFormTemplate>
+                </DxDataGrid>
+            </tbody>
+        </table>
+    </div>
+    <BuscadorEmergente Titulo=@tituloBuscador Visible="@PopupBuscadorVisible" DataSource="@Items"
+                       Columnas="@ColumnasBuscador" onObjetoSeleccionado="onObjectSelected" />
+}
+
+@code {
+
+    [Parameter]
+    public string Titulo { get; set; } = null!;
+    [Parameter]
+    public Stock[] DataSource { get; set; } = null!;
+    [Parameter]
+    public bool PermiteAgregar { get; set; } = false;
+    [Parameter]
+    public bool PermiteEditar { get; set; } = false;
+    [Parameter]
+    public bool PermiteEliminar { get; set; } = false;
+
+    [Parameter]
+    public EventCallback<Stock> onGuardar { get; set; }
+
+    [Parameter]
+    public Stock Model { get; set; } = new Stock();
+    DxDataGrid<Stock> grid;
+    Unidad[] Unidades = null;
+    private Unidad selectedUnidad = null;
+    Unidad SelectedUnidad
+    {
+        get => selectedUnidad;
+        set { selectedUnidad = value; InvokeAsync(StateHasChanged); }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        Unidades = await Http.GetFromJsonAsync<Unidad[]>("api/Unidades");
+    }
+
+    class TipoInsumo
+    {
+        public int Codigo { get; set; }
+        public string Descrip { get; set; }
+    }
+
+    int TipoInsumoCodigo = 1;
+    TipoInsumo[] TiposInsumo = new[] {
+      new TipoInsumo { Codigo = 1, Descrip = "Productos" },
+      new TipoInsumo { Codigo = 2, Descrip = "Semi Elaborados" },
+      new TipoInsumo { Codigo = 4, Descrip = "Materias Primas" },
+      new TipoInsumo { Codigo = 10, Descrip = "Articulo de Reventa" },
+      new TipoInsumo { Codigo = 11, Descrip = "Herramental/Inventariables" },
+      new TipoInsumo { Codigo = 12, Descrip = "Repuestos" },
+      new TipoInsumo { Codigo = 13, Descrip = "Servicios" }
+    };
+
+
+    void OnRowEditStarting(Stock pedido)
+    {
+        if (pedido == null)
+        {
+            Model.CG_ART = null;
+            Model.DES_ART = null;
+            Model.UNID = null;
+            Model.SERIE = null;
+            Model.DESPACHO = null;
+            Model.LOTE = null;
+
+        }
+        else
+        {
+            Model = pedido;
+        }
+        InvokeAsync(StateHasChanged);
+    }
+    void OnCancelButtonClick()
+    {
+        Model = null;
+        grid.CancelRowEdit();
+    }
+    async Task HandleValidSubmit()
+    {
+        //EditContext.DataItem.CG_ART = EditContext.CodigoProducto;
+        //EditContext.DataItem.DES_ART = EditContext.DescripcionProducto;
+        //EditContext.DataItem.UNID = EditContext.Unidad;
+        //EditContext.DataItem.Stock = EditContext.Cantidad;
+
+        //EditContext.DataItem.DESPACHO = EditContext.Despacho;
+        //EditContext.DataItem.SERIE = EditContext.Serie;
+        //EditContext.DataItem.LOTE = EditContext.Lote;
+
+        //EditContext.DataItem.CG_CUENT = EditContext.Cuenta;
+        //EditContext.DataItem.CG_ORDEN = EditContext.Cg_Orden;
+
+        //if (EditContext.DataItem.DESPACHO == null)
+        //    EditContext.DataItem.DESPACHO = string.Empty;
+
+        //if (EditContext.DataItem.SERIE == null)
+        //    EditContext.DataItem.SERIE = string.Empty;
+
+        //if (EditContext.DataItem.LOTE == null)
+        //    EditContext.DataItem.LOTE = string.Empty;
+
+        try
+        {
+
+
+            await onGuardar.InvokeAsync(Model);
+
+            //if (EditContext.IsNewRow)
+            //{
+            //    //envio item pedido para guardar a Stock operarcion para poder agregarle los datos de la cabecera: vale, ocompra etc
+
+            //    var nuevoItem = (new Stock[] { EditContext.DataItem });
+            //    //lStock = (new Stock[] { EditContext.DataItem }).Concat(lStock);
+            //    DataSource = nuevoItem.Concat(DataSource).ToArray();
+            //}
+
+
+            Model = null;
+            await grid.CancelRowEdit();
+        }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+
+    }
+
+    void OnRowRemoving(Stock pedido)
+    {
+        DataSource = DataSource.Where(v => v != pedido).ToArray();
+        InvokeAsync(StateHasChanged);
+    }
+
+    string tituloBuscador { get; set; } = "";
+    private bool popupBuscadorVisible = false;
+    bool PopupBuscadorVisible { get => popupBuscadorVisible; set { popupBuscadorVisible = value; InvokeAsync(StateHasChanged); } }
+    string[] ColumnasBuscador = new string[] { "CG_PROD", "DES_PROD" }; /*,"DES_ART","DESPACHO", "LOTE","SERIE"*/
+    object[] Items;
+
+    protected async Task BuscarProductos()
+    {
+        Items = null;
+        tituloBuscador = "Listado de Productos";
+        ColumnasBuscador = new string[] { "CG_PROD", "DES_PROD", "UNID" };
+        int cg_orden = TipoInsumoCodigo;
+        Items = await Http.GetFromJsonAsync<Producto[]>($"api/Productos/GetProductos/{cg_orden}");
+        PopupBuscadorVisible = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task onObjectSelected(object obj)
+    {
+        PopupBuscadorVisible = false;
+        var tipoEntidad = obj.GetType().Name;
+        if (tipoEntidad == "Stock")
+        {
+            var pedido = (Stock)obj;
+            //Get items del vale
+            var vale = pedido.VALE;
+            DataSource = await Http.GetFromJsonAsync<Stock[]>($"api/Stock/AbriVale/{pedido.VALE}");
+
+            //NumeroVale = ItemsVale[0].VALE;
+            //Fecha = ItemsVale[0].FE_MOV;
+        }
+
+        if (tipoEntidad == "Producto")
+        {
+            var producto = (Producto)obj;
+            Model.CG_ART = producto.CG_PROD;
+            Model.DES_ART = producto.DES_PROD;
+            Model.UNID = producto.UNID;
+            //Model.CG_CUENT = producto.CG_CUENT1;
+            //Model.exige = producto.ExigeOA;
+            Model.CG_ORDEN = producto.CG_ORDEN;
+
+        }
+    }
+}

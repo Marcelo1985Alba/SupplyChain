@@ -1,0 +1,85 @@
+﻿@inject HttpClient Http
+@inject ToastService toastService
+
+<div class="form-row container">
+    <div class="col-10">
+        <DxSpinEdit @bind-Value="@Valor" ShowSpinButtons="@MostrarSpin" ReadOnly="@EsSoloLectura" />
+        @*@if (!EsSoloLectura)
+            {
+                <DxSpinEdit @bind-Value="@Valor" ShowSpinButtons="@MostrarSpin"
+                            ></DxSpinEdit>
+            }*@
+        @*else
+            {
+                <DxSpinEdit Value="0" ShowSpinButtons="@MostrarSpin" ReadOnly="true"></DxSpinEdit>
+            }*@
+
+    </div>
+    <div class="col-2">
+        <DxButton Text="..." RenderStyle="@ButtonRenderStyle.Danger"
+                  Visible="@MostraBotonBusqueda"
+                  Enabled="@HabilitaBotonBusqueda" Click="@(async (e)=> await BuscarOCompras())"
+                  RenderStyleMode="@ButtonRenderStyleMode.Outline" />
+    </div>
+
+</div>
+
+<BuscadorEmergente DataSource="ItemsABuscar" Columnas="ColumnasBuscador" Titulo="@TituloBuscador"
+                   Visible="@PopupBuscadorVisible" onObjetoSeleccionado="@(async(o)=> await EnviarObjetoSeleccionado(o))" />
+
+@code {
+
+    [Parameter] public decimal Valor { get; set; } = 0;
+    [Parameter] public bool EsSoloLectura { get; set; } = false;
+    [Parameter] public bool MostraBotonBusqueda { get; set; } = false;
+    [Parameter] public bool HabilitaBotonBusqueda { get; set; } = true;
+    [Parameter] public bool MostrarSpin { get; set; } = true;
+    [Parameter] public EventCallback<Compra> OnOCSeleccionada { get; set; }
+    [Parameter] public int? CodigoDeposito { get; set; }
+    [Parameter] public string Remito { get; set; }
+    private Compra[] ItemsABuscar = null;
+    private string[] ColumnasBuscador = new string[] { "NUMERO", "DES_PROVE" };
+    private string TituloBuscador = "Listado de Ordenes de Compra";
+    private bool PopupBuscadorVisible = false;
+    private ButtonRenderStyle buttonRenderStyle = ButtonRenderStyle.Secondary;
+
+    private async Task BuscarOCompras()
+    {
+        Console.WriteLine(CodigoDeposito);
+        //Avisar con un cartel que se debe seleccionar deposito
+        if (CodigoDeposito == null)
+        {
+            toastService.ShowToast("Seleccione Deposito", TipoAlerta.Info);
+        }
+        if (Remito.Trim() == "﻿0000-00000000")
+        {
+            Console.WriteLine(Remito);
+            toastService.ShowToast("Seleccione Remito", TipoAlerta.Info);
+        }
+
+        if (CodigoDeposito != null && Remito.Trim() != "﻿0000-00000000")
+        {
+            PopupBuscadorVisible = true;
+            ItemsABuscar = await Http.GetFromJsonAsync<Compra[]>("api/Compras");
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public async Task EnviarObjetoSeleccionado(object compra)
+    {
+        var oc = (Compra)compra;
+        PopupBuscadorVisible = false;
+        await OnOCSeleccionada.InvokeAsync(oc);
+    }
+
+    private ButtonRenderStyle CambiarColorBorde()
+    {
+        if (HabilitaBotonBusqueda)
+        {
+            buttonRenderStyle = ButtonRenderStyle.Danger;
+            return buttonRenderStyle;
+        }
+
+        return buttonRenderStyle;
+    }
+}

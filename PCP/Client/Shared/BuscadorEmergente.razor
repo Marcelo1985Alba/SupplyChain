@@ -1,0 +1,133 @@
+﻿<DxPopup HeaderText="@Titulo" CssClass="myPopupCss"
+         @bind-Visible="@Visible">
+    <HeaderTemplate>
+        <div class="custom-header bg-primary text-white w-100">
+            <span class="demo-icon-info bg-white"></span>
+            <a class="close-button oi oi-x text-white" href="javascript:;" aria-hidden="true"
+               role="button" aria-label="Close popup" @onclick="@(() => Visible = false)">
+
+            </a>
+        </div>
+    </HeaderTemplate>
+    <Content>
+        @if (DataSource == null)
+        {
+            <span>Cargando...</span>
+        }
+        else
+        {
+            if (DataSource.Length == 0)
+            {
+                <span class="text-muted">Sin Datos</span>
+            }
+            else
+            {
+                <table class="dxbs-table table table-bordered table-sm myFormat myFormatHeader">
+                <tbody>
+                    <DxDataGrid Data="@DataSource"
+                                HtmlRowDecoration="@OnHtmlRowDecoration"
+                                PageSize="8" 
+                                SelectionMode="DataGridSelectionMode.SingleSelectedDataRow"
+                                @bind-SingleSelectedDataRow="@Selected">
+
+                        @foreach (string col in Columnas)
+                            {
+                                System.Reflection.PropertyInfo[] propiedades = null;
+                                object itemfinal = null;
+                            @foreach (var item in DataSource)
+                                {
+                                    itemfinal = item;
+                                    propiedades = item.GetType().GetProperties();
+
+                                }
+                                if (propiedades.Any(p => p.Name.ToUpper() == col.ToUpper()))
+                                {
+                                    var propiedad = propiedades.Where(p => p.Name == col.ToUpper()).FirstOrDefault();
+
+                                //obtener el atributo para mostrar el nombre de columna
+                                string nameColumn = propiedad.Name;
+                                    var tipoDate = propiedad.PropertyType == typeof(DateTime) ? propiedad.GetValue(itemfinal, null) : null;
+                                    var attr = propiedad.GetCustomAttributesData().FirstOrDefault(a => a.AttributeType.Name.Equals("ColumnaGridViewAtributo"));
+                                    nameColumn = attr?.NamedArguments.FirstOrDefault(a => a.MemberName.Equals("Name")).TypedValue.Value.ToString();
+                                    if (tipoDate != null)
+                                    {
+                                    <DxDataGridDateEditColumn Field="@propiedad.Name" Caption="@nameColumn"
+                                                              DisplayFormat="dd/MM/yyyy"
+                                                              Width="120px">
+                                    </DxDataGridDateEditColumn>
+                                    }
+                                    else
+                                    {
+                                        if (col.ToUpper() == "DES_ART")
+                                        {
+                                        <DxDataGridColumn Field="@propiedad.Name" Caption="@nameColumn" Width="220px"></DxDataGridColumn>
+                                        }
+                                        else
+                                        {
+                                        <DxDataGridColumn Field="@propiedad.Name" Caption="@nameColumn" Width="150px"></DxDataGridColumn>
+                                        }
+                                    }
+
+                                }
+                            }
+
+                    </DxDataGrid>
+                </tbody>
+            </table>
+
+            }
+        }
+
+
+    </Content>
+    <FooterTemplate>
+        <button class="btn btn-primary"
+                @onclick="EnviarObjetoSeleccionado">
+            OK
+        </button>
+    </FooterTemplate>
+</DxPopup>
+
+@code {
+    [Parameter]
+    public string Titulo { get; set; } = null!;
+    [Parameter]
+    public bool Visible { get; set; } = false;
+    [Parameter]
+    public Object[] DataSource { get; set; } = null!;
+    [Parameter]
+    public Object[] Columnas { get; set; } = null!;
+
+    public object Selected { get; set; } = null!;
+    [Parameter]
+    public EventCallback<object> onObjetoSeleccionado { get; set; }
+
+    public void EnviarObjetoSeleccionado()
+    {
+        Visible = false;
+        onObjetoSeleccionado.InvokeAsync(Selected);
+    }
+
+    void OnHtmlRowDecoration(DataGridHtmlRowDecorationEventArgs<Object> eventArgs)
+    {
+        
+        //eventArgs.CssClass = " table-sm font-weight-bold";
+        //if (eventArgs.VisibleIndex % 2 == 1)
+        //    eventArgs.CssClass = " table-dark";
+        //if (eventArgs.DataItem != null /*&& eventArgs.DataItem.UnitsInOrder > largeOrder*/)
+        //    eventArgs.CssClass = " table-warning font-weight-bold";
+        //else
+        //    eventArgs.Attributes.Add("data-low-price", "");
+    }
+
+    public static Object GetPropValue(object src, string propName)
+    {
+        var entity = src.GetType().GetProperty(propName).GetValue(src, null);
+        return entity;
+    }
+
+    public static T GetPropertyValue<T>(object obj, string propName)
+    {
+        return (T)obj.GetType().GetProperty(propName).GetValue(obj, null);
+    }
+}
