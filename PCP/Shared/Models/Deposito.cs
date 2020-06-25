@@ -12,6 +12,7 @@ namespace SupplyChain.Shared.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int? CG_DEP { get; set; }
         [ColumnaGridViewAtributo(Name = "Depósito")]
+        [Required(ErrorMessage ="Ingresar Deposito")]
         public string DES_DEP { get; set; }
         [ColumnaGridViewAtributo(Name = "Tipo")]
         public string TIPO_DEP { get; set; }

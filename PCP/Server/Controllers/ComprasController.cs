@@ -26,18 +26,9 @@ namespace PCP.Server.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Compra>>> GetCompras()
         {
-            try
-            {
-                //OC ABIERTAS
-                return await _context.Compras.Where(c=> c.CG_CIA == cg_cia_usuario && c.FE_CIERRE == null && c.NUMERO > 0)
-                    .ToListAsync();
-
-            }
-            catch (Exception ex)
-            {
-
-                throw;
-            }
+            //OC ABIERTAS
+            return await _context.Compras.Where(c=> c.CG_CIA == cg_cia_usuario && c.FE_CIERRE == null && c.NUMERO > 0)
+                .ToListAsync();
         }
 
         // GET: api/Compras/5
@@ -51,7 +42,7 @@ namespace PCP.Server.Controllers
                 return NotFound();
             }
 
-            return compra;
+            return Ok(compra);
         }
 
         // GET: api/Compras/GetCompraByNumero/5

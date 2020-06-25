@@ -25,15 +25,7 @@ namespace PCP.Server.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Unidad>>> GetUnidades()
         {
-            try
-            {
-                return await _context.Unidades.ToListAsync();
-            }
-            catch (Exception ex)
-            {
-
-                throw;
-            }
+            return await _context.Unidades.ToListAsync();
         }
 
         // GET: api/Unidades/5

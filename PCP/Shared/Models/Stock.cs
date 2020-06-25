@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SupplyChain.Shared.HelpersAtributo;
+using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -8,6 +9,20 @@ namespace SupplyChain.Shared.Models
     [Table("Pedidos")]
     public class Stock
     {
+        /*AGREGO CAMPOS (EXIGEDESPACHO, EXIGELOTE, EXIGESERIE) NO MAPEADOS A LA BASE DE DATOS 
+         * QUE DEBEN SER SETEADOS POR EL PRODUCTO PARA VALIDACIONES.
+         * PARA DETERMINAR SI LOS CAMPOS DESPACHO, SERIE Y LOTE
+         * DEBEN SER REQUERIDOS. DE NO AGREGAR ESTO NO PERMITE REALIZAR LA GRABACION EN LA BASE DE DATOS POR EF
+         * SE CREA UN ATRIBUTO ESPECIAL PARA CADA CAMPO: Ejemplo RequireWhenExigeDespacho
+         */
+        [NotMapped]
+        public int? EXIGEDESPACHO { get; set; } = 0;
+        [NotMapped]
+        public int? EXIGELOTE { get; set; } = 0;
+        [NotMapped]
+        public int? EXIGESERIE { get; set; } = 0;
+
+
         [ColumnaGridViewAtributo(Name = "Vale")]
         public decimal? VALE { get; set; } = 0;
         [ColumnaGridViewAtributo(Name = "Fecha vale")]
@@ -21,7 +36,6 @@ namespace SupplyChain.Shared.Models
         [ColumnaGridViewAtributo(Name = "Letra de la factura")]
         public string LEYENDA { get; set; } = "";
         [ColumnaGridViewAtributo(Name = "Remito")]
-        [DefaultValue("")]
         public string REMITO { get; set; } = "0000-00000000";
         [ColumnaGridViewAtributo(Name = "Tipo de operación")]
         public int? TIPOO { get; set; } = 0;
@@ -58,10 +72,13 @@ namespace SupplyChain.Shared.Models
         [ColumnaGridViewAtributo(Name = "Tipo artículo")]
         public string TIPO { get; set; } = "";
         [ColumnaGridViewAtributo(Name = "Lote")]
+        [RequireWhenExigeLote]
         public string LOTE { get; set; } = "";
         [ColumnaGridViewAtributo(Name = "Serie")]
+        [RequireWhenExigeSerie]
         public string SERIE { get; set; } = "";
         [ColumnaGridViewAtributo(Name = "Despacho")]
+        [RequireWhenExigeDespacho]
         public string DESPACHO { get; set; } = "";
         [ColumnaGridViewAtributo(Name = "Ubicación")]
         public string UBICACION { get; set; } = "";

@@ -1,7 +1,7 @@
 ﻿@page "/"
 @inject ToastService toastService
 
-<h1 class="mt-5">Hello, world!</h1>
+<h1 class="mt-5 pt-1">Hello, world!</h1>
 
 Welcome to your new app.
 
@@ -14,11 +14,23 @@ Welcome to your new app.
 <button class="btn btn-warning" @onclick="@(() => toastService.ShowToast("I'm a WARNING message", TipoAlerta.Warning))">Warning Toast</button>
 <button class="btn btn-danger" @onclick="@(() => toastService.ShowToast("I'm an ERROR message", TipoAlerta.Error))">Error Toast</button>
 
+<EditForm Model="@deposito" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator/>
+    <DxTextBox @bind-Text ="@deposito.DES_DEP"/>
+</EditForm>
+
 @code{
+
+    private Deposito deposito = new Deposito();
     private Deposito selectedDepositoSalida = null;
     Deposito SelectedDepositoSalida
     {
         get => selectedDepositoSalida;
         set { selectedDepositoSalida = value; InvokeAsync(StateHasChanged); }
+    }
+
+    void HandleValidSubmit()
+    {
+
     }
 }

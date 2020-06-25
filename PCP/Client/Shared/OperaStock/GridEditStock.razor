@@ -94,10 +94,6 @@ else
                                 </DxFormLayoutItem>
                                 <DxFormLayoutItem Caption="Unidad" ColSpanMd="3" Context="FormLayoutContext">
                                     <Template>
-                                        @*<DxComboBox Data="@Unidades"
-                                                    NullText="Select Region..."
-                                                    @bind-SelectedItem="@EditContext.Unidad">
-                                        </DxComboBox>*@
                                         <DxTextBox @bind-Text="@EditContext.Unidad" ReadOnly="true"></DxTextBox>
                                     </Template>
                                 </DxFormLayoutItem>
@@ -141,6 +137,7 @@ else
     </div>
     <BuscadorEmergente Titulo=@tituloBuscador Visible="@PopupBuscadorVisible" DataSource="@Items"
                        Columnas="@ColumnasBuscador" onObjetoSeleccionado="onObjectSelected" />
+
 }
 
 @code {
@@ -150,6 +147,7 @@ else
     [Parameter] public bool PermiteAgregar { get; set; } = false;
     [Parameter] public bool PermiteEditar { get; set; } = false;
     [Parameter] public bool PermiteEliminar { get; set; } = false;
+
 
     [Parameter] public EventCallback<Stock> onGuardar { get; set; }
     [CascadingParameter] public Stock RegistroGenerado { get; set; }
@@ -162,10 +160,10 @@ else
         get => selectedUnidad;
         set { selectedUnidad = value; InvokeAsync(StateHasChanged); }
     }
-    protected override async Task OnInitializedAsync()
-    {
-        //Unidades = await Http.GetFromJsonAsync<Unidad[]>("api/Unidades");
-    }
+    //protected override async Task OnInitializedAsync()
+    //{
+    //    //Unidades = await Http.GetFromJsonAsync<Unidad[]>("api/Unidades");
+    //}
 
     class TipoInsumo
     {
@@ -183,6 +181,50 @@ else
       new TipoInsumo { Codigo = 12, Descrip = "Repuestos" },
       new TipoInsumo { Codigo = 13, Descrip = "Servicios" }
     };
+
+    public class RequireWhenExigeDespachoAttribute : ValidationAttribute
+    {
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        {
+            var stock = (FormEditContext)validationContext.ObjectInstance;
+            if (stock.ExigeDespacho == 0)
+                return ValidationResult.Success;
+
+            var despacho = value as string;
+            return string.IsNullOrWhiteSpace(despacho)
+                ? new ValidationResult("Ingresar Despacho: el insumo exige despacho")
+                : ValidationResult.Success;
+        }
+    }
+
+    public class RequireWhenExigeSerieAttribute : ValidationAttribute
+    {
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        {
+            var stock = (FormEditContext)validationContext.ObjectInstance;
+            if (stock.ExigeSerie == 0)
+                return ValidationResult.Success;
+
+            var serie = value as string;
+            return string.IsNullOrWhiteSpace(serie)
+                ? new ValidationResult("Ingresar Serie: el insumo exige serie")
+                : ValidationResult.Success;
+        }
+    }
+    public class RequireWhenExigeLoteAttribute : ValidationAttribute
+    {
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        {
+            var stock = (FormEditContext)validationContext.ObjectInstance;
+            if (stock.ExigeLote == 0)
+                return ValidationResult.Success;
+
+            var lote = value as string;
+            return string.IsNullOrWhiteSpace(lote)
+                ? new ValidationResult("Ingresar Lote: el insumo exige lote")
+                : ValidationResult.Success;
+        }
+    }
 
     class FormEditContext
     {
@@ -207,6 +249,9 @@ else
             Serie = DataItem.SERIE;
             Lote = DataItem.LOTE;
             Importe1 = DataItem.IMPORTE1;
+            ExigeDespacho = DataItem.EXIGEDESPACHO;
+            ExigeSerie = DataItem.EXIGESERIE;
+            ExigeLote = DataItem.EXIGELOTE;
         }
 
         public Stock DataItem { get; set; }
@@ -240,12 +285,16 @@ else
         public string Moneda { get; set; } = "";
 
 
-        //string desp;
+        [RequireWhenExigeDespacho]
         public string Despacho { get; set; } = "";
+        [RequireWhenExigeSerie]
         public string Serie { get; set; } = "";
+        [RequireWhenExigeLote]
         public string Lote { get; set; } = "";
 
-        public decimal Cuenta { get; set; } = 0;
+        public int? ExigeDespacho { get; set; } = 0;
+        public int? ExigeSerie { get; set; } = 0;
+        public int? ExigeLote { get; set; } = 0;
         public bool ExigeOA { get; set; }
         public int Cg_Orden { get; set; }
 
@@ -277,7 +326,7 @@ else
         EditContext.DataItem.SERIE = EditContext.Serie;
         EditContext.DataItem.LOTE = EditContext.Lote;
         EditContext.DataItem.IMPORTE1 = EditContext.Importe1;
-        EditContext.DataItem.CG_CUENT = EditContext.Cuenta;
+        EditContext.DataItem.EXIGEDESPACHO = EditContext.ExigeDespacho;
         EditContext.DataItem.CG_ORDEN = EditContext.Cg_Orden;
 
 
@@ -305,7 +354,7 @@ else
             }
 
 
-            await InvokeAsync(StateHasChanged);
+            await grid.Refresh();
             EditContext = null;
             await grid.CancelRowEdit();
 

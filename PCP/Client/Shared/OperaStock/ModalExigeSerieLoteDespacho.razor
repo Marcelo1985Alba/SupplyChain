@@ -1,0 +1,73 @@
+﻿@inherits ModalExigeSerieLoteDespachoBase
+
+<DxPopup HeaderText="DEFINICION DEL DESPACHO" HeaderCssClass="bg-primary text-white w-100"
+         @bind-Visible="@PopupVisible">
+    <Content>
+        <EditForm Model="@Modelo" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <div class="row">
+                <div class="col-12">
+                    <label for="despacho">IDENTIFICACION DEL DESPACHO DEL PROVEEDOR</label>
+                    <DxTextBox Id="despacho" @bind-Text="@Modelo.DESPACHO" />
+                </div>
+                <div class="col-12">
+                    <label for="serie">IDENTIFICACION DEL N DE SERIE DEL PROVEEDOR</label>
+                    <DxTextBox Id="serie" @bind-Text="@Modelo.SERIE" />
+                </div>
+                <div class="col-12">
+                    <label for="lote">IDENTIFICACION DEL LOTE DEL PROVEEDOR</label>
+                    <DxTextBox Id="lote" @bind-Text="@Modelo.LOTE" />
+                    @*<ValidationMessage For="@(()=> ItemStock.LOTE)" />*@
+                </div>
+            </div>
+
+        </EditForm>
+        @*<EditForm Model="@Modelo" Context="EditFormContext" OnValidSubmit="@HandleValidSubmit">
+                <DataAnnotationsValidator/>
+                <DxFormLayout>
+                    <DxFormLayoutItem Caption="Lote:" ColSpanMd="6">
+                        <Template>
+                            <DxTextBox @bind-Text="@Modelo.LOTE" />
+                            <ValidationMessage For="@(()=> ItemStock.LOTE)"/>
+                        </Template>
+                    </DxFormLayoutItem>
+                 </DxFormLayout>
+            </EditForm>*@
+        <div>
+            @ModeloSerialize
+        </div>
+    </Content>
+    <FooterTemplate>
+        <DxButton RenderStyle="ButtonRenderStyle.Secondary" Click="@(async(e)=>  await SerializarModelo())"
+                  Text="Serialize"/>
+        <DxButton RenderStyle="ButtonRenderStyle.Primary" SubmitFormOnClick="true"
+                  Text="OK" />
+    </FooterTemplate>
+</DxPopup>
+
+@*
+
+    <EditForm Model="@Modelo" OnValidSubmit="@HandleValidSubmit" OnInvalidSubmit="@HandleInvalidSubmit"
+              Context="EditFormContext">
+        <DataAnnotationsValidator />
+        <DxFormLayout>
+            <DxFormLayoutItem Caption="Identifier:" ColSpanMd="4">
+                <Template>
+                    <DxTextBox @bind-Text="@Modelo.CG_PROD" />
+                </Template>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Primary Classification:" ColSpanMd="6">
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <Template>
+                    <ValidationSummary />
+                </Template>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12">
+                <Template>
+                    <DxButton SubmitFormOnClick="true" Text="Submit" RenderStyle="@ButtonRenderStyle.Secondary" />
+                </Template>
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </EditForm>*@
+

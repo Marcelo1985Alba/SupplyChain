@@ -25,16 +25,22 @@ namespace PCP.Server.Controllers
         //GET: api/Productos/GetProductos/1
         [HttpGet("GetProductos/{cg_orden}")]
         public async Task<ActionResult<IEnumerable<Producto>>> GetProductos(int cg_orden)
+        { 
+            return await _context.Productos.Where(p => p.CG_CIA == cg_cia_usuario 
+                && p.CG_ORDEN == cg_orden).ToListAsync();
+        }
+
+        //GET: api/Productos/GetProductoByCodigo/cg_prod
+        [HttpGet("GetProductoByCodigo/{cg_prod}")]
+        public async Task<ActionResult<Producto>> GetProductoByCodigo(string cg_prod)
         {
             try
             {
-                return await _context.Productos.Where(p => p.CG_CIA == cg_cia_usuario 
-                && p.CG_ORDEN == cg_orden).ToListAsync();
+                return await _context.Productos.Where(p => p.CG_PROD == cg_prod).FirstAsync();
             }
             catch (Exception ex)
             {
-
-                throw;
+                return BadRequest(ex);
             }
         }
 

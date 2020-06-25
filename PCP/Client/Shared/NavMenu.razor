@@ -21,7 +21,7 @@
                         <span class="" aria-hidden="true">Stock</span>
                     </a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="opestock">Operaciones de Stock</a>
+                        <a class="dropdown-item" href="stockoperaciones">Operaciones de Stock</a>
                         <a class="dropdown-item" href="#">Another action</a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="#">Something else here</a>
@@ -34,7 +34,6 @@
 </nav>
 
 @code {
-    bool expandSubNavMenu = false;
     bool collapseNavMenu = true;
     string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 

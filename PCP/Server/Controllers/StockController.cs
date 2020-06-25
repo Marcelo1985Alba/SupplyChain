@@ -29,19 +29,10 @@ namespace PCP.Server.Controllers
         public async Task<IActionResult> GetMaxVale()
         {
             int numero = 1;
-            try
-            {
-                if (await _context.Pedidos.CountAsync() > 0)
-                    numero += await _context.Pedidos.Where(p => p.CG_CIA == cg_cia_usuario).MaxAsync(p => (int)p.VALE);
+            if (await _context.Pedidos.CountAsync() > 0)
+                numero += await _context.Pedidos.Where(p => p.CG_CIA == cg_cia_usuario).MaxAsync(p => (int)p.VALE);
 
-                return Json(numero);
-            }
-
-            catch (Exception EX)
-            {
-
-                throw;
-            }
+            return Json(numero);
         }
 
         // GET:   
@@ -49,26 +40,18 @@ namespace PCP.Server.Controllers
         public async Task<ActionResult<IEnumerable<Stock>>> GetValesByTipo(int tipoo)
         {
             List<Stock> lStock = new List<Stock>();
-            try
+            if (_context.Pedidos.Any())
             {
-                if (_context.Pedidos.Any())
-                {
-                    lStock = await _context.Pedidos.Where(p => p.TIPOO == tipoo && (int)p.VOUCHER == 0
-                     && p.CG_CIA == cg_cia_usuario).ToListAsync();
-                }
-
-                if (lStock == null)
-                {
-                    return NotFound();
-                }
-
-                return lStock;
+                lStock = await _context.Pedidos.Where(p => p.TIPOO == tipoo && (int)p.VOUCHER == 0
+                    && p.CG_CIA == cg_cia_usuario).ToListAsync();
             }
-            catch (Exception ex)
+
+            if (lStock == null)
             {
-
-                throw;
+                return NotFound();
             }
+
+            return lStock;
         }
 
         // GET: api/Stock/AbriVale/{vale}
@@ -155,21 +138,11 @@ namespace PCP.Server.Controllers
                 }
                 else
                 {
-                    return BadRequest();
+                    return BadRequest(ex);
                 }
             }
-
-            try
-            {
-                //var ret = CreatedAtAction(nameof(AbriVale), new { vale = Stock.VALE }, Stock);
-                //return ret;
-                return Ok(stock);
-            }
-            catch (Exception ex)
-            {
-
-                throw;
-            }
+            
+            return Ok(stock);
         }
 
         private bool RegistroExists(decimal? registro)

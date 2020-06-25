@@ -1,7 +1,7 @@
 ﻿@inject HttpClient Http
 @inject ToastService toastService
 
-<div class="form-row container">
+<div class="form-row">
     <div class="col-10">
         <DxSpinEdit @bind-Value="@Valor" ShowSpinButtons="@MostrarSpin" ReadOnly="@EsSoloLectura" />
         @*@if (!EsSoloLectura)

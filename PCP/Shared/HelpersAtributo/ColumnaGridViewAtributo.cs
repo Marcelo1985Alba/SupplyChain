@@ -5,8 +5,7 @@ using System.Text;
 namespace SupplyChain.Shared.Models
 {
     /// <summary>
-    /// Especial para las grillas de Devexpress y poder cambiar el nombre 
-    /// de las columnas 
+    /// Especial para las grillas de Devexpress y poder cambiar el nombre de las columna.
     /// </summary>
     public class ColumnaGridViewAtributo: Attribute
     {

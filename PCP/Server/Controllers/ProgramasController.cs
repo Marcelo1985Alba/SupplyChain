@@ -26,31 +26,15 @@ namespace PCP.Server.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Programa>>> GetProgramas()
         {
-            try
-            {
-                return await _context.Programas.Where(p => p.Cg_Cia == cg_cia_usuario).ToListAsync();
-            }
-            catch (Exception ex)
-            {
-
-                throw;
-            }
-            
+            return await _context.Programas.Where(p => p.Cg_Cia == cg_cia_usuario).ToListAsync();
+ 
         }
         // GET: api/Programas/GetProgramaByOF/cg_ordf
         [HttpGet("GetProgramaByOF/{cg_ordf}")]
         public async Task<ActionResult<IEnumerable<Programa>>> GetCompraByOF(decimal cg_ordf)
         {
-            try
-            {
-                return await _context.Programas.Where(p => p.Cg_Cia == cg_cia_usuario 
+            return await _context.Programas.Where(p => p.Cg_Cia == cg_cia_usuario 
                     && p.CG_ORDF == cg_ordf).ToListAsync();
-            }
-            catch (Exception ex)
-            {
-
-                throw;
-            }
 
         }
 
