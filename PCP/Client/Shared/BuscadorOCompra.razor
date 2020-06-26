@@ -16,7 +16,7 @@
 
     </div>
     <div class="col-2">
-        <DxButton Text="..." RenderStyle="@ButtonRenderStyle.Danger"
+        <DxButton RenderStyle="@ButtonRenderStyle.Danger" IconCssClass="fas fa-search"
                   Visible="@MostraBotonBusqueda"
                   Enabled="@HabilitaBotonBusqueda" Click="@(async (e)=> await BuscarOCompras())"
                   RenderStyleMode="@ButtonRenderStyleMode.Outline" />
@@ -38,20 +38,21 @@
     [Parameter] public int? CodigoDeposito { get; set; }
     [Parameter] public string Remito { get; set; }
     private Compra[] ItemsABuscar = null;
-    private string[] ColumnasBuscador = new string[] { "NUMERO", "DES_PROVE" };
+    private string[] ColumnasBuscador = new string[] { "NUMERO", "CG_MAT", "AUTORIZADO", "DES_PROVE" };
     private string TituloBuscador = "Listado de Ordenes de Compra";
     private bool PopupBuscadorVisible = false;
     private ButtonRenderStyle buttonRenderStyle = ButtonRenderStyle.Secondary;
 
     private async Task BuscarOCompras()
     {
-        Console.WriteLine(CodigoDeposito);
         //Avisar con un cartel que se debe seleccionar deposito
         if (CodigoDeposito == null)
         {
             toastService.ShowToast("Seleccione Deposito", TipoAlerta.Info);
         }
-        if (Remito.Trim() == "﻿0000-00000000")
+
+
+        if (Remito.ToLower() == "﻿0000-00000000")
         {
             Console.WriteLine(Remito);
             toastService.ShowToast("Seleccione Remito", TipoAlerta.Info);

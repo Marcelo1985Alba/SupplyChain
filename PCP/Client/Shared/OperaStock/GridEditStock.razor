@@ -25,7 +25,8 @@ else
                                                  NewButtonVisible="PermiteAgregar"
                                                  Width="90px">
                         </DxDataGridCommandColumn>
-                        <DxDataGridColumn Field="@nameof(Stock.CG_ART)" Caption="Cod. Producto"></DxDataGridColumn>
+                        <DxDataGridColumn Field="@nameof(Stock.CG_ART)" Caption="Cod. Producto" 
+                                          SortOrder="@DataGridColumnSortOrder.Ascending"></DxDataGridColumn>
                         <DxDataGridColumn Field="@nameof(Stock.DES_ART)" Caption="Desc. Producto"></DxDataGridColumn>
                         <DxDataGridColumn Field="@nameof(Stock.STOCK)" Caption="Cantidad"></DxDataGridColumn>
                         <DxDataGridComboBoxColumn Data="@Unidades" Field="@nameof(Stock.UNID)"
@@ -39,7 +40,6 @@ else
                         <DxDataGridColumn Field="@nameof(Stock.IMPORTE2)" Caption="Importe2"></DxDataGridColumn>
                         <DxDataGridColumn Field="@nameof(Stock.IMPORTE3)" Caption="Importe3"></DxDataGridColumn>
                         <DxDataGridColumn Field="@nameof(Stock.IMPORTE4)" Caption="Importe4"></DxDataGridColumn>
-                        <DxDataGridColumn Field="@nameof(Stock.IMPORTE6)" Caption="Importe6"></DxDataGridColumn>
                         <DxDataGridColumn Field="@nameof(Stock.DESPACHO)" Caption="Despacho"></DxDataGridColumn>
                         <DxDataGridColumn Field="@nameof(Stock.SERIE)" Caption="Serie"></DxDataGridColumn>
                         <DxDataGridColumn Field="@nameof(Stock.LOTE)" Caption="Lote"></DxDataGridColumn>
@@ -120,10 +120,11 @@ else
                                 <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
                                     <Template>
                                         <div class="dxbs-fl-ctrl dxbs-fl-ctrl-nc text-right">
-                                            <button class="btn btn-sm bg-success" type="submit">Guardar</button>
-                                            <button class="btn btn-sm bg-danger" type="button" 
+                                            <button class="btn btn-success btn-sm" type="submit">
+                                            <i class="fas fa-save"></i> Guardar</button>
+                                            <button class="btn btn-sm btn-danger" type="button"
                                                     @onclick="@OnCancelButtonClick">
-                                                Cancelar
+                                                <i class="fas fa-backspace"></i>  Cancelar
                                             </button>
                                         </div>
                                     </Template>

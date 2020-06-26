@@ -15,15 +15,16 @@
     <DxToolbar AdaptivityAutoCollapseItemsToIcons="true" CssClass="mt-4" 
                ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
             <Items>
-                <DxToolbarItem Text="Info" RenderStyle="ButtonRenderStyle.Info" 
+                <DxToolbarItem RenderStyle="ButtonRenderStyle.Info" Text="Info"
                                Alignment="ToolbarItemAlignment.Right" 
                                @onclick="@(() => toastService.ShowToast("Test Mensaje", TipoAlerta.Info))" />
-                <DxToolbarItem Text="Imprimir" RenderStyle="ButtonRenderStyle.Success" 
-                               Alignment="ToolbarItemAlignment.Right" />
-                <DxToolbarItem IconCssClass="tb-icon tb-icon-alert" BeginGroup="true" 
+                <DxToolbarItem IconCssClass="fas fa-print"
+                               RenderStyle="ButtonRenderStyle.Success" 
+                               Alignment="ToolbarItemAlignment.Right" Text="Imprimir" />
+                <DxToolbarItem BeginGroup="true" IconCssClass="fas fa-minus-circle"
                                RenderStyle="ButtonRenderStyle.Danger" Text="Eliminar" 
                                Alignment="ToolbarItemAlignment.Right" />
-                <DxToolbarItem IconCssClass="tb-icon tb-icon-alert" Text="Nuevo" 
+                <DxToolbarItem IconCssClass="fas fa-plus" Text="Nuevo" 
                                Alignment="ToolbarItemAlignment.Right" />
                 <DxToolbarItem IconCssClass="tb-icon tb-icon-alert" 
                                RenderStyle="ButtonRenderStyle.Warning" Text="Warning" 
@@ -73,11 +74,14 @@
 
                 </div>
                 <div class="col-2">
-                    <button class="btn btn-outline-info btn-sm"
+                    <DxButton RenderStyleMode="@ButtonRenderStyleMode.Outline" Enabled="@DisableCssClass"
+                              Click="@(async (e)=> await AbrirVale())"
+                              IconCssClass="fas fa-search"/>
+                    @*<button class="btn btn-outline-info btn-sm"
                             disabled="@DisableCssClass"
                             @onclick="AbrirVale">
                         ...
-                    </button>
+                    </button>*@
 
                 </div>
 
@@ -165,7 +169,7 @@
 
 @code {
     Stock StockGuardado = new Stock();
-    bool DisableCssClass { get => selectedTire == null ? true : false; }
+    bool DisableCssClass { get => selectedTire == null ? false : true; }
     int NumVale { get; set; }
 
 
@@ -323,26 +327,35 @@
         }
     }
 
-    void CargarVale()
+    async Task CargarVale()
     {
+        //Cargando Datos de Cabecera
         NumVale = (int)ItemsVale[0].VALE;
         Fecha = ItemsVale[0].FE_MOV;
         //depos: ver cual campo es ingreso y salida: tal vez depende segun el tipo de operacion
-
         selectedDepositoIngreso = Depositos.Where(d => d.CG_DEP == ItemsVale[0].CG_DEP).FirstOrDefault();
-
-
-
         OrdenFabricacion = (int)ItemsVale[0].CG_ORDF;
         OCompra = (int)ItemsVale[0].OCOMPRA;
         Pedido = (int)ItemsVale[0].PEDIDO;
         Cg_CLI_Cg_PROVE = ItemsVale[0].CG_CLI == 0 ? ItemsVale[0].CG_PROVE : ItemsVale[0].CG_CLI;
         DescripcionPro = ItemsVale[0].CG_CLI == 0 ? "Proveedor" : "Cliente";
         Remito = ItemsVale[0].REMITO;
-        PermiteAgregarItem = true;
+        PermiteAgregarItem = false;
         PermiteEditarItem = true;
         PermiteEliminarItem = true;
-        InvokeAsync(StateHasChanged);
+
+        //Cargando datos para controlar si exige lote etc: para controlar validaciones en la edicion.
+
+        await ItemsVale.ToList().ForEachAsync(async i => {
+            var cg_prod = i.CG_ART;
+            var prod = await Http.GetFromJsonAsync<Producto>($"api/Productos/GetProductoByCodigo/{cg_prod}");
+            i.EXIGEDESPACHO = prod.EXIGEDESPACHO;
+            i.EXIGELOTE = prod.EXIGELOTE;
+            i.EXIGESERIE = prod.EXIGESERIE;
+        });
+
+
+        await InvokeAsync(StateHasChanged);
     }
 
     #region "BUSCADOR EMERGENTE"
@@ -467,6 +480,13 @@
                 pedido.DES_ART = item.DES_MAT;
                 pedido.MONEDA = item.MONEDA;
                 pedido.UNID = item.UNID;
+                //pedido.CG_ORDEN = item.CG_ORE
+                //Calcular stock A
+                pedido.STOCKA = item.AUTORIZADO;
+                pedido.STOCK = item.AUTORIZADO * item.CG_DEN;
+                //pedido.IMPORTE1 = 
+
+
                 //datos del producto: exigeserie etc.
                 var prod = await Http.GetFromJsonAsync<Producto>($"api/Productos/GetProductoByCodigo/{item.CG_MAT}");
                 pedido.IMPORTE1 = item.PRECIO;
