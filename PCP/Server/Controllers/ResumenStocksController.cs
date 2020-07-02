@@ -12,7 +12,7 @@ namespace PCP.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ResumenStocksController : ControllerBase
+    public class ResumenStocksController : Controller
     {
         private readonly AppDbContext _context;
 
@@ -28,6 +28,20 @@ namespace PCP.Server.Controllers
             try
             {
                 return await _context.ResumenStock.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
+        // GET: api/ResumenStocksPositivo/GetResumenStockPositivo
+        [HttpGet("GetResumenStockPositivo")]
+        public async Task<ActionResult<IEnumerable<ResumenStock>>> GetResumenStockPositivo()
+        {
+            try
+            {
+                return await _context.ResumenStock.Where(rs=> rs.STOCK > 0).ToListAsync();
             }
             catch (Exception ex)
             {
@@ -55,6 +69,34 @@ namespace PCP.Server.Controllers
 
             return resumenStock;
         }
+
+        // GET: api/ResumenStocks/GetByStock
+        [HttpGet("GetByStock")]
+        public async Task<ActionResult<ResumenStock>> GetByStock([FromQuery] ResumenStock resumenStock)
+        {
+            try
+            {
+                
+                resumenStock.DESPACHO = resumenStock.DESPACHO == null ? "" : resumenStock.DESPACHO ;
+                resumenStock.LOTE = resumenStock.LOTE == null ? "" : resumenStock.LOTE ;
+                resumenStock.SERIE = resumenStock.SERIE == null ? "" : resumenStock.SERIE ;
+                return await _context.ResumenStock.Where(r => 
+                r.CG_DEP == resumenStock.CG_DEP
+                && r.CG_ART.ToUpper() == resumenStock.CG_ART.ToUpper()
+                && r.LOTE.ToUpper() == resumenStock.LOTE.ToUpper()
+                && r.DESPACHO.ToUpper() == resumenStock.DESPACHO.ToUpper()
+                && r.SERIE.ToUpper() == resumenStock.SERIE.ToUpper()
+            ).FirstAsync();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+            
+        }
+
+
+        
 
         // PUT: api/ResumenStocks/5
         // To protect from overposting attacks, enable the specific properties you want to bind to, for

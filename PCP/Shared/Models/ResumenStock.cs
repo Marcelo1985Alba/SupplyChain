@@ -20,7 +20,7 @@ namespace SupplyChain.Shared.Models
         public string UBICACION { get; set; } = "";
         [ColumnaGridViewAtributo(Name = "Stock")]
         public decimal STOCK { get; set; } = 0;
-        [ColumnaGridViewAtributo(Name = "Stock")]
+        [ColumnaGridViewAtributo(Name = "Deposito")]
         public int CG_DEP { get; set; } = 0;
         [ColumnaGridViewAtributo(Name = "Orden Ingreso")]
         public int CG_ORDING { get; set; } = 0;

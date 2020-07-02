@@ -22,6 +22,21 @@ namespace SupplyChain.Shared.Models
         [NotMapped]
         public int? EXIGESERIE { get; set; } = 0;
 
+        /* 
+         * AGREGO MODELO RESUMENSTOCK PARA VALIDAR QUE LA CANTIDAD INGRESADA NO SUPERE A LA DEL STOCK: 
+         * EJEM: EN DEV A PROVE
+         */
+        [NotMapped]
+        public ResumenStock ResumenStock { get; set; } = new ResumenStock();
+
+        /*
+         * Agrego campo CG_DEP_ALT no mapeado para guardar el otro deposito: 
+         * Por ejemplo: para la operacion Movim entre dep donde necesito generar dos registros
+         * 1) con el deposito de ingres
+         * 2) con el deposito de salida
+         */
+        [NotMapped]
+        public int CG_DEP_ALT { get; set; } = 0;
 
         [ColumnaGridViewAtributo(Name = "Vale")]
         public decimal? VALE { get; set; } = 0;
@@ -70,16 +85,16 @@ namespace SupplyChain.Shared.Models
         [ColumnaGridViewAtributo(Name = "Nombre artículo")]
         public string DES_ART { get; set; } = "";
         [ColumnaGridViewAtributo(Name = "Tipo artículo")]
-        public string TIPO { get; set; } = "";
+        public string TIPO { get; set; } = " ";
         [ColumnaGridViewAtributo(Name = "Lote")]
         [RequireWhenExigeLote]
-        public string LOTE { get; set; } = "";
+        public string LOTE { get; set; } = " ";
         [ColumnaGridViewAtributo(Name = "Serie")]
         [RequireWhenExigeSerie]
-        public string SERIE { get; set; } = "";
+        public string SERIE { get; set; } = " ";
         [ColumnaGridViewAtributo(Name = "Despacho")]
         [RequireWhenExigeDespacho]
-        public string DESPACHO { get; set; } = "";
+        public string DESPACHO { get; set; } = " ";
         [ColumnaGridViewAtributo(Name = "Ubicación")]
         public string UBICACION { get; set; } = "";
         [ColumnaGridViewAtributo(Name = "Depósito")]
@@ -87,6 +102,7 @@ namespace SupplyChain.Shared.Models
         [ColumnaGridViewAtributo(Name = "Cantidad")]
         public decimal? CANTENT { get; set; } = 0;
         [ColumnaGridViewAtributo(Name = "Cantidad operación")]
+        [ControlCant]
         public decimal? STOCK { get; set; } = 0;
         [ColumnaGridViewAtributo(Name = "Unidad stock")]
         public string UNID { get; set; } = "";
@@ -116,9 +132,9 @@ namespace SupplyChain.Shared.Models
         [ColumnaGridViewAtributo(Name = "Precio")]
         public decimal? IMPORTE6 { get; set; } = 0;
         [ColumnaGridViewAtributo(Name = "Porciento descuento")]
-        public decimal? DESCUENTO { get; set; } = 1;
+        public decimal? DESCUENTO { get; set; } = 0;
         [ColumnaGridViewAtributo(Name = "Porciento bonificación")]
-        public decimal? BONIFIC { get; set; } = 1;
+        public decimal? BONIFIC { get; set; } = 0;
         [ColumnaGridViewAtributo(Name = "Porciento IVA")]
         public decimal? IVA { get; set; } = 0;
         [ColumnaGridViewAtributo(Name = "Indice conversión moneda")]

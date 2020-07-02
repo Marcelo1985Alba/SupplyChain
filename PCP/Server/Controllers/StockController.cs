@@ -10,6 +10,7 @@ using SupplyChain.Shared.Models;
 using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Metadata;
+using SupplyChain.Shared.Extensions;
 
 namespace PCP.Server.Controllers
 {
@@ -72,6 +73,66 @@ namespace PCP.Server.Controllers
             return lStock;
         }
 
+
+        // GET: api/Stock/GetByResumenStock
+        [HttpGet("GetByResumenStock")]
+        public async Task<ActionResult<Stock>> GetByResumenStock([FromQuery] ResumenStock resumenStock)
+        {
+            try
+            {
+
+                resumenStock.DESPACHO = resumenStock.DESPACHO == null ? "" : resumenStock.DESPACHO;
+                resumenStock.LOTE = resumenStock.LOTE == null ? "" : resumenStock.LOTE;
+                resumenStock.SERIE = resumenStock.SERIE == null ? "" : resumenStock.SERIE;
+
+                return await _context.Pedidos.Where(r =>
+                r.CG_DEP == resumenStock.CG_DEP
+                && r.CG_ART.ToUpper() == resumenStock.CG_ART.ToUpper()
+                && r.LOTE.ToUpper() == resumenStock.LOTE.ToUpper()
+                && r.DESPACHO.ToUpper() == resumenStock.DESPACHO.ToUpper()
+                && r.SERIE.ToUpper() == resumenStock.SERIE.ToUpper()
+                ).Take(1).OrderByDescending(r=> r.REGISTRO).FirstAsync();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+
+        }
+
+
+
+        // GET: api/Stock/AbriValeByOCParaDevol/{oc}
+        [HttpGet("AbriValeByOCParaDevol/{oc}")]
+        public async Task<ActionResult<List<Stock>>> AbriValeByOCParaDevol(int oc)
+        {
+            List<Stock> lStock = new List<Stock>();
+            if (_context.Pedidos.Any())
+            {
+                lStock = await _context.Pedidos.Where(p => p.OCOMPRA == oc && p.CG_CIA == cg_cia_usuario
+                && p.TIPOO == 5).ToListAsync();
+            }
+
+            if (lStock == null)
+            {
+                return NotFound();
+            }
+
+            //await lStock.ForEachAsync(async s => 
+            //{
+            //    s.ResumenStock = await _context.ResumenStock.Where(r => r.CG_DEP == s.CG_DEP
+            //        && r.CG_ART.ToUpper() == s.CG_ART.ToUpper()
+            //        && r.LOTE.ToUpper() == s.LOTE.ToUpper()
+            //        && r.DESPACHO.ToUpper() == s.DESPACHO.ToUpper()
+            //        && r.SERIE.ToUpper() == s.SERIE.ToUpper()).FirstAsync();
+            //});
+
+            
+
+            return lStock;
+        }
+
+
         // PUT: api/Stock/PutStock/123729
         [HttpPut("PutStock/{registro}")]
         public async Task<ActionResult<Stock>> PutStock(decimal registro, Stock stock)
@@ -113,19 +174,13 @@ namespace PCP.Server.Controllers
             stock.REGISTRO = null;
             stock.USUARIO = "USER";
             stock.CG_CIA = 1;
-            stock.UNIDA = "Unid";
-            //if (Stock?.CG_TIRE == 0  || 
-            //    (Stock.CG_TIRE == 5 && Stock.CG_PROVE == 0) )
-            //{
-            //    return BadRequest();
-            //}
 
-            //if (Stock.CG_TIRE == 5 && Stock.CG_PROVE == 0)
-            //{
-
-            //}
-
+            if (stock.TIPOO == 9)
+            {
+                stock.STOCK = -stock.STOCK;
+            }
             _context.Pedidos.Add(stock);
+
             try
             {
                 await _context.SaveChangesAsync();
@@ -141,7 +196,54 @@ namespace PCP.Server.Controllers
                     return BadRequest(ex);
                 }
             }
-            
+
+            if (stock.TIPOO == 6) //devol a prove: cargo los datos de resumen stock para el item para luego verificar si tiene stock cuando se vuelva a editar
+            {
+                stock.ResumenStock = await _context.ResumenStock.Where(r => r.CG_DEP == stock.CG_DEP
+                && r.CG_ART.ToUpper() == stock.CG_ART.ToUpper()
+                && r.LOTE.ToUpper() == stock.LOTE.ToUpper()
+                && r.DESPACHO.ToUpper() == stock.DESPACHO.ToUpper()
+                && r.SERIE.ToUpper() == stock.SERIE.ToUpper()).FirstAsync();
+            }
+
+            //MOVIM ENTRE DEP: GENERAR SEGUNDO REGISTROS: 
+            if (stock?.TIPOO == 9)
+            {
+                stock.REGISTRO = null;
+                stock.USUARIO = "USER";
+                stock.CG_CIA = 1;
+                stock.STOCK = -stock.STOCK;
+                stock.CG_DEP = stock.CG_DEP_ALT;
+
+                _context.Pedidos.Add(stock);
+
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex)
+                {
+                    if (RegistroExists(stock.REGISTRO))
+                    {
+                        return Conflict();
+                    }
+                    else
+                    {
+                        return BadRequest(ex);
+                    }
+                }
+
+                if (stock.TIPOO == 6) //devol a prove: cargo los datos de resumen stock para el item para luego verificar si tiene stock cuando se vuelva a editar
+                {
+                    stock.ResumenStock = await _context.ResumenStock.Where(r => r.CG_DEP == stock.CG_DEP
+                    && r.CG_ART.ToUpper() == stock.CG_ART.ToUpper()
+                    && r.LOTE.ToUpper() == stock.LOTE.ToUpper()
+                    && r.DESPACHO.ToUpper() == stock.DESPACHO.ToUpper()
+                    && r.SERIE.ToUpper() == stock.SERIE.ToUpper()).FirstAsync();
+                }
+
+            }
+
             return Ok(stock);
         }
 

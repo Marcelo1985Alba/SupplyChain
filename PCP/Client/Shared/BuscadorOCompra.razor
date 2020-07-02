@@ -37,6 +37,8 @@
     [Parameter] public EventCallback<Compra> OnOCSeleccionada { get; set; }
     [Parameter] public int? CodigoDeposito { get; set; }
     [Parameter] public string Remito { get; set; }
+    [Parameter] public int? Tipoo { get; set; }
+
     private Compra[] ItemsABuscar = null;
     private string[] ColumnasBuscador = new string[] { "NUMERO", "CG_MAT", "AUTORIZADO", "DES_PROVE" };
     private string TituloBuscador = "Listado de Ordenes de Compra";
@@ -46,24 +48,49 @@
     private async Task BuscarOCompras()
     {
         //Avisar con un cartel que se debe seleccionar deposito
-        if (CodigoDeposito == null)
+        if (Tipoo == 5)
         {
-            toastService.ShowToast("Seleccione Deposito", TipoAlerta.Info);
-        }
+            if (CodigoDeposito == null)
+            {
+                toastService.ShowToast("Seleccione Deposito Ingreso", TipoAlerta.Info);
+                return;
+            }
 
+            if (string.IsNullOrEmpty(Remito) || Remito.ToLower().Trim() == "﻿0000-00000000")
+            {
+                Console.WriteLine(Remito);
+                toastService.ShowToast("Seleccione Remito", TipoAlerta.Info);
+                return;
+            }
 
-        if (Remito.ToLower() == "﻿0000-00000000")
-        {
-            Console.WriteLine(Remito);
-            toastService.ShowToast("Seleccione Remito", TipoAlerta.Info);
-        }
-
-        if (CodigoDeposito != null && Remito.Trim() != "﻿0000-00000000")
-        {
             PopupBuscadorVisible = true;
             ItemsABuscar = await Http.GetFromJsonAsync<Compra[]>("api/Compras");
             await InvokeAsync(StateHasChanged);
         }
+
+        if (Tipoo == 6)//devol a provee
+        {
+            //NO SE CONTROLA DEPOSITO PORQUE SE OBTINE DE RESUMEN STOCK
+            //if (CodigoDeposito == null)
+            //{
+            //    toastService.ShowToast("Seleccione Deposito Salida", TipoAlerta.Info);
+            //    return;
+            //}
+
+            PopupBuscadorVisible = true;
+            ItemsABuscar = await Http.GetFromJsonAsync<Compra[]>("api/Compras");
+            await InvokeAsync(StateHasChanged);
+        }
+
+
+
+
+        //if (CodigoDeposito != null && (string.IsNullOrEmpty(Remito) || Remito.Trim() != "﻿0000-00000000"))
+        //{
+        //    PopupBuscadorVisible = true;
+        //    ItemsABuscar = await Http.GetFromJsonAsync<Compra[]>("api/Compras");
+        //    await InvokeAsync(StateHasChanged);
+        //}
     }
 
     public async Task EnviarObjetoSeleccionado(object compra)

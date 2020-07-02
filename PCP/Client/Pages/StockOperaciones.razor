@@ -12,25 +12,25 @@
         Operaciones de Stock a Realizar
         <small class="text-info"> <strong>@SelectedTire?.Descrip</strong></small>
     </h4>
-    <DxToolbar AdaptivityAutoCollapseItemsToIcons="true" CssClass="mt-4" 
+    <DxToolbar AdaptivityAutoCollapseItemsToIcons="true" CssClass="mt-4"
                ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
-            <Items>
-                <DxToolbarItem RenderStyle="ButtonRenderStyle.Info" Text="Info"
-                               Alignment="ToolbarItemAlignment.Right" 
-                               @onclick="@(() => toastService.ShowToast("Test Mensaje", TipoAlerta.Info))" />
-                <DxToolbarItem IconCssClass="fas fa-print"
-                               RenderStyle="ButtonRenderStyle.Success" 
-                               Alignment="ToolbarItemAlignment.Right" Text="Imprimir" />
-                <DxToolbarItem BeginGroup="true" IconCssClass="fas fa-minus-circle"
-                               RenderStyle="ButtonRenderStyle.Danger" Text="Eliminar" 
-                               Alignment="ToolbarItemAlignment.Right" />
-                <DxToolbarItem IconCssClass="fas fa-plus" Text="Nuevo" 
-                               Alignment="ToolbarItemAlignment.Right" />
-                <DxToolbarItem IconCssClass="tb-icon tb-icon-alert" 
-                               RenderStyle="ButtonRenderStyle.Warning" Text="Warning" 
-                               Alignment="ToolbarItemAlignment.Right" />
-            </Items>
-        </DxToolbar>
+        <Items>
+            <DxToolbarItem RenderStyle="ButtonRenderStyle.Info" Text="Info"
+                           Alignment="ToolbarItemAlignment.Right"
+                           @onclick="@(() => toastService.ShowToast("Test Mensaje", TipoAlerta.Info))" />
+            <DxToolbarItem IconCssClass="fas fa-print"
+                           RenderStyle="ButtonRenderStyle.Success"
+                           Alignment="ToolbarItemAlignment.Right" Text="Imprimir" />
+            <DxToolbarItem BeginGroup="true" IconCssClass="fas fa-minus-circle"
+                           RenderStyle="ButtonRenderStyle.Danger" Text="Eliminar"
+                           Alignment="ToolbarItemAlignment.Right" />
+            <DxToolbarItem IconCssClass="fas fa-plus" Text="Nuevo"
+                           Alignment="ToolbarItemAlignment.Right" />
+            <DxToolbarItem IconCssClass="tb-icon tb-icon-alert"
+                           RenderStyle="ButtonRenderStyle.Warning" Text="Warning"
+                           Alignment="ToolbarItemAlignment.Right" />
+        </Items>
+    </DxToolbar>
 
 </div>
 <hr />
@@ -57,8 +57,9 @@
             <div class="form-row">
                 <div class="col">
                     <BuscadorOCompra EsSoloLectura="@OCSoloLectura" HabilitaBotonBusqueda="@HabilitaBotonOC"
-                                     MostraBotonBusqueda="@MostrarBotorOC" MostrarSpin="false" 
+                                     MostraBotonBusqueda="@MostrarBotorOC" MostrarSpin="false"
                                      CodigoDeposito="@SelectedDepositoOC?.CG_DEP" Remito="@Remito"
+                                     Tipoo="selectedTire?.Tipoo"
                                      Valor="@OCompra" OnOCSeleccionada="onObjectSelected" />
                 </div>
             </div>
@@ -76,12 +77,12 @@
                 <div class="col-2">
                     <DxButton RenderStyleMode="@ButtonRenderStyleMode.Outline" Enabled="@DisableCssClass"
                               Click="@(async (e)=> await AbrirVale())"
-                              IconCssClass="fas fa-search"/>
+                              IconCssClass="fas fa-search" />
                     @*<button class="btn btn-outline-info btn-sm"
-                            disabled="@DisableCssClass"
-                            @onclick="AbrirVale">
-                        ...
-                    </button>*@
+                                disabled="@DisableCssClass"
+                                @onclick="AbrirVale">
+                            ...
+                        </button>*@
 
                 </div>
 
@@ -265,15 +266,8 @@
     void SelectedTireChanged(Tire tire)
     {
         selectedTire = tire;
-        //Dependiendo el tire Habilitar controles
-        if (selectedTire?.Tipoo > 0)
-        {
-            PermiteAgregarItem = true;
-        }
-        else
-        {
-            PermiteAgregarItem = false;
-        }
+        //Dependiendo el TIPOO Habilitar controles
+
 
         StockGuardado.TIPOO = selectedTire.Tipoo;
         MostrarBotorOC = false;
@@ -306,6 +300,24 @@
             HabilitaBotonOF = true;
         }
 
+        if (selectedTire?.Tipoo == 9)
+        {
+            DepositoIngresoSoloLectura = false;
+            if (selectedDepositoIngreso?.CG_DEP == null || selectedDepositoIngreso?.CG_DEP == 0)
+            {
+                toastService.ShowToast("Seleccionar Deposito de Ingreso", TipoAlerta.Info);
+                return;
+            }
+
+            PermiteAgregarItem = true;
+        }
+
+        if (selectedTire?.Tipoo == 21)
+        {
+            PermiteAgregarItem = true;
+        }
+
+        StockGuardado.TIPOO = selectedTire?.Tipoo; // lo utilizo para pasar la variable a los items de la grilla.
         InvokeAsync(StateHasChanged);
     }
 
@@ -324,6 +336,12 @@
         if (selectedTire?.Tipoo == 5) //RECEP prove
         {
             selectedDepositoOC = deposito;
+        }
+
+        if (selectedTire?.Tipoo == 9) //MOVIM ENTRE DEP
+        {
+            PermiteAgregarItem = true;
+            ItemsVale = new List<Stock>().ToArray();
         }
     }
 
@@ -346,7 +364,8 @@
 
         //Cargando datos para controlar si exige lote etc: para controlar validaciones en la edicion.
 
-        await ItemsVale.ToList().ForEachAsync(async i => {
+        await ItemsVale.ToList().ForEachAsync(async i =>
+        {
             var cg_prod = i.CG_ART;
             var prod = await Http.GetFromJsonAsync<Producto>($"api/Productos/GetProductoByCodigo/{cg_prod}");
             i.EXIGEDESPACHO = prod.EXIGEDESPACHO;
@@ -366,53 +385,39 @@
     private async Task onGuardarPedido(Stock stock)
     {
         //stock.NUMOCI = 0;
-        stock.FE_MOV = DateTime.Now;
+        stock.FE_MOV = Fecha;
         stock.VALE = NumVale;
-        //stock.REMITO = Remito;
+
         //stock.CG_CLI = 0;
         stock.CG_PROVE = Cg_CLI_Cg_PROVE;
-        stock.DES_PROVE = DescripcionPro.Trim();
-        //stock.FLAG = 0;
-        //stock.AVISO = "";
-        //stock.CG_ORDF = 0;
-        stock.OCOMPRA = OCompra;
-        stock.CG_DEP = SelectedDepositoIngreso.CG_DEP;
-        //stock.VOUCHER = 0;
+
+
         stock.TIPOO = selectedTire.Tipoo;
-        stock.AVISO = "RECEPCION DE INSUMOS DE PROVEEDOR"; /*VERIFICAR TIPOO*/
-        //stock.TIPO = "";
-        //stock.CG_POSTA = "";
-        //stock.COMPROB = "";
-        //stock.CG_DEN = 0;
-        //stock.DESCUENTO = 0;
-        //stock.CUIT = "";
-        //stock.DES_CLI = "";
-        //stock.DIRECC = "";
-        //stock.DIRENT = "";
-        //stock.FACTURA = "";
-        //stock.LEYENDA = "";
-        //stock.LOCALIDAD = "";
-        //stock.MONEDA = "";
-        //stock.OBS1 = "";
-        //stock.OBS2 = "";
-        //stock.OBS3 = "";
-        //stock.OBS4 = "";
-        //stock.OBSERITEM = "";
-        //stock.OBSERVACIONES = "";
-        //stock.ORCO = "";
-        //stock.UBICACION = "";
-        //stock.UNIDA = "";
+        //TODO: controlar el TIPOO al guardar para setar cada campo
+        if (stock.TIPOO == 5)
+        {
+            stock.AVISO = "RECEPCION DE INSUMOS DE PROVEEDOR"; /*VERIFICAR TIPOO*/
+            stock.OCOMPRA = OCompra;
+            stock.DES_PROVE = DescripcionPro.Trim();
+            stock.REMITO = Remito;
+            stock.CG_DEP = SelectedDepositoIngreso.CG_DEP;
+        }
+
+        if (stock.TIPOO == 6)
+        {
+            stock.OCOMPRA = OCompra;
+            stock.DES_PROVE = DescripcionPro.Trim();
+            @*stock.CG_DEP = SelectedDepositoSalida.CG_DEP;*@
+            stock.STOCK = -stock.STOCK;
+        }
+
+        if (stock.TIPOO == 9)//movim depos
+        {
+            stock.CG_DEP_ALT = (int)selectedDepositoIngreso.CG_DEP;
+        }
+
         stock.ENTRREAL = DateTime.UtcNow;
-        //stock.PEDIDO = 0;
-        //stock.IVA = 0;
-        //stock.BONIFIC = 0;
-        //stock.CANTENT = 0;
-        //stock.CANTENTA = 0;
-        //stock.CANTPED = 0;
-        //stock.STOCKA = 0;
-        //stock.VA_INDIC = 0;
-        stock.IMPORTE1 = (stock.IMPORTE1 == null ? 0 : stock.IMPORTE1); //Se obtiene de la orden de compra
-                                                                        //stock.IMPORTE6 = 0;
+
         HttpResponseMessage response = null;
         if (stock.REGISTRO == null || stock.REGISTRO <= 0)
         {
@@ -427,9 +432,9 @@
 
 
 
-        if (response.StatusCode == System.Net.HttpStatusCode.BadRequest ||
-        response.StatusCode == System.Net.HttpStatusCode.NotFound ||
-        response.StatusCode == System.Net.HttpStatusCode.Conflict)
+        if (response.StatusCode == System.Net.HttpStatusCode.BadRequest
+            || response.StatusCode == System.Net.HttpStatusCode.NotFound
+            || response.StatusCode == System.Net.HttpStatusCode.Conflict)
         {
             var mensServidor = await response.Content.ReadAsStringAsync();
 
@@ -441,13 +446,13 @@
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 //
-                var mensServidor = await response.Content.ReadFromJsonAsync<Stock>();
+                StockGuardado = await response.Content.ReadFromJsonAsync<Stock>();
                 await InvokeAsync(StateHasChanged);
-                Console.WriteLine($"Registro: {mensServidor}");//guarda en la consola del chrome para ver los dtos.
-                StockGuardado = mensServidor;
-                toastService.ShowToast($"Registrado Correctemente.Vale {mensServidor.VALE}", TipoAlerta.Success);
+                var itemsJson = JsonSerializer.Serialize(StockGuardado);
+                Console.WriteLine(itemsJson);
+                toastService.ShowToast($"Registrado Correctemente.Vale {StockGuardado.VALE}", TipoAlerta.Success);
             }
-            //No abrir vale al guardar pues se perden los items: await AbrirVale();
+
 
 
         }
@@ -463,58 +468,67 @@
         if (tipoEntidad == "Compra")
         {
             var compra = (Compra)obj;
-            var ItemsCompras = await Http.GetFromJsonAsync<Compra[]>($"api/Compras/GetCompraByNumero/{compra.NUMERO}");
-
-            //Cargar los item de compras en los items de items para guardar vale
+            OCompra = (int)compra.NUMERO;
             decimal registronegativo = 0;
-            foreach (var item in ItemsCompras)
+            if (selectedTire.Tipoo == 5)
             {
-                registronegativo--;
-                Stock pedido = new Stock();
-                pedido.OCOMPRA = item.NUMERO;
-                OCompra = (int)item.NUMERO;
-                pedido.CG_PROVE = item.CG_PROVE;
-                Cg_CLI_Cg_PROVE = item.CG_PROVE;
-                DescripcionPro = item.DES_PROVE;
-                pedido.CG_ART = item.CG_MAT;
-                pedido.DES_ART = item.DES_MAT;
-                pedido.MONEDA = item.MONEDA;
-                pedido.UNID = item.UNID;
-                //pedido.CG_ORDEN = item.CG_ORE
-                //Calcular stock A
-                pedido.STOCKA = item.AUTORIZADO;
-                pedido.STOCK = item.AUTORIZADO * item.CG_DEN;
-                //pedido.IMPORTE1 = 
+                var ItemsCompras = await Http.GetFromJsonAsync<Compra[]>($"api/Compras/GetCompraByNumero/{compra.NUMERO}");
 
+                //Cargar los item de compras en los items de items para guardar vale
 
-                //datos del producto: exigeserie etc.
-                var prod = await Http.GetFromJsonAsync<Producto>($"api/Productos/GetProductoByCodigo/{item.CG_MAT}");
-                pedido.IMPORTE1 = item.PRECIO;
-                pedido.EXIGEDESPACHO = prod.EXIGEDESPACHO;
-                pedido.EXIGESERIE = prod.EXIGESERIE;
-                pedido.EXIGELOTE = prod.EXIGELOTE;
-
-                pedido.REGISTRO = registronegativo;
-                if (selectedTire.Tipoo == 5)
+                foreach (var item in ItemsCompras)
                 {
-                    pedido.STOCK = item.AUTORIZADO;
+                    registronegativo--;
+                    Stock pedido = new Stock();
+                    pedido.OCOMPRA = item.NUMERO;
+                    OCompra = (int)item.NUMERO;
+                    pedido.CG_PROVE = item.CG_PROVE;
+                    Cg_CLI_Cg_PROVE = item.CG_PROVE;
+                    DescripcionPro = item.DES_PROVE;
+                    pedido.CG_ART = item.CG_MAT;
+                    pedido.DES_ART = item.DES_MAT;
+                    pedido.MONEDA = item.MONEDA;
+                    pedido.UNID = item.UNID;
+                    //pedido.CG_ORDEN = item.CG_ORE
+                    //Calcular stockA
+                    pedido.STOCKA = item.AUTORIZADO;
+                    pedido.STOCK = item.AUTORIZADO * item.CG_DEN;
+                    pedido.IMPORTE1 = item.PRECIONETO * item.CG_DEN;
+
+
+                    //datos del producto: exigeserie etc.
+                    var prod = await Http.GetFromJsonAsync<Producto>($"api/Productos/GetProductoByCodigo/{item.CG_MAT}");
+
+                    pedido.EXIGEDESPACHO = prod.EXIGEDESPACHO;
+                    pedido.EXIGESERIE = prod.EXIGESERIE;
+                    pedido.EXIGELOTE = prod.EXIGELOTE;
+
+                    pedido.REGISTRO = registronegativo;
+
+
+                    lStock.Add(pedido);
+                    ItemsVale = lStock.ToArray();
                 }
-
-
-
-                if (selectedTire.Tipoo == 6)
-                {
-                    pedido.STOCK = -item.AUTORIZADO;
-                    //Hacer una busqueda especial de resumen stock y cargarlo:
-                    //buscar los prod por el deposito de salida seleccionado previamente en la cabacera.
-                    //poner la cantidad en negativo. Ademas Controlar la cantidad editada por el usuario.
-                }
-
-                lStock.Add(pedido);
             }
 
-            ItemsVale = lStock.ToArray();
-            PermiteAgregarItem = true;
+            if (selectedTire.Tipoo == 6)
+            {
+                //Devuelve con los items con su respectivo stock
+                ItemsVale = await Http.GetFromJsonAsync<Stock[]>($"api/Stock/AbriValeByOCParaDevol/{compra.NUMERO}");
+
+                registronegativo = 0;
+                await ItemsVale.ForEachAsync(async stock =>
+                {
+                    registronegativo--;
+                    stock.REGISTRO = registronegativo;
+                    stock.STOCK = Math.Abs((decimal)stock.STOCK);
+                    await InvokeAsync(StateHasChanged);
+                });
+            }
+
+
+
+            PermiteAgregarItem = selectedTire.Tipoo == 5;
             PermiteEditarItem = true;
             PermiteEliminarItem = true;
         }
@@ -527,7 +541,7 @@
 
             if (ItemsVale != null || ItemsVale.Length > 0)
             {
-                CargarVale();
+                await CargarVale();
             }
 
         }
@@ -588,7 +602,7 @@
         }
         else
         {
-            CargarVale();
+            await CargarVale();
         }
     }
 
